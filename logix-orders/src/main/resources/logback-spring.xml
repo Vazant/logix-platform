@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+  <!-- Сначала определим springProperty -->
+  <springProperty name="springAppName" source="spring.application.name" scope="context"/>
+
+  <!-- Теперь можно использовать springAppName -->
+  <property name="LOG_DIR" value="logs"/>
+  <property name="LOG_FILE" value="${LOG_DIR}/${springAppName}.json"/>
+  <property name="CONSOLE_LOG_PATTERN"
+    value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
+
+  <!-- Console Appender -->
+  <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <charset>UTF-8</charset>
+      <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+    </encoder>
+  </appender>
+
+  <!-- JSON Logstash Appender -->
+  <appender name="logstash" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_FILE}</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${LOG_FILE}.%d{yyyy-MM-dd}.gz</fileNamePattern>
+      <maxHistory>14</maxHistory>
+    </rollingPolicy>
+    <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+      <providers>
+        <timestamp>
+          <timeZone>UTC</timeZone>
+        </timestamp>
+        <pattern>
+          <pattern>
+            {
+            "timestamp": "@timestamp",
+            "level": "%level",
+            "logger": "%logger",
+            "thread": "%thread",
+            "message": "%message",
+            "service": "${springAppName:-}",
+            "trace": "%X{traceId:-}",
+            "span": "%X{spanId:-}",
+            "exception": "%exception"
+            }
+          </pattern>
+        </pattern>
+      </providers>
+    </encoder>
+  </appender>
+
+  <!-- Root Logger -->
+  <root level="INFO">
+    <appender-ref ref="console"/>
+    <appender-ref ref="logstash"/>
+  </root>
+
+</configuration>

@@ -1,0 +1,22 @@
+filebeat.inputs:
+  - type: filestream
+    id: logichain-orderservice-json
+    paths:
+      - /path/to/your/logs/order-service.json
+    json.keys_under_root: true
+    json.add_error_key: true
+    fields:
+      service: order-service
+    fields_under_root: true
+
+output.elasticsearch:
+  hosts: [ "http://localhost:9200" ]
+  index: "logichain-orderservice-%{+yyyy.MM.dd}"
+
+setup.template.name: "logichain-template"
+setup.template.pattern: "logichain-*"
+
+# Включить метрики (опционально)
+http.enabled: true
+http.host: "localhost"
+http.port: 5066

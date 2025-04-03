@@ -1,0 +1,95 @@
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <artifactId>logix-orders</artifactId>
+
+  <dependencies>
+    <!-- Spring Boot -->
+    <dependency>
+      <artifactId>spring-boot-starter-web</artifactId>
+      <groupId>org.springframework.boot</groupId>
+    </dependency>
+    <dependency>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+      <groupId>org.springframework.boot</groupId>
+    </dependency>
+    <dependency>
+      <artifactId>slf4j-api</artifactId>
+      <groupId>org.slf4j</groupId>
+    </dependency>
+    <dependency>
+      <artifactId>spring-kafka</artifactId>
+      <groupId>org.springframework.kafka</groupId>
+    </dependency>
+    <dependency>
+      <artifactId>liquibase-core</artifactId>
+      <groupId>org.liquibase</groupId>
+    </dependency>
+    <dependency>
+      <artifactId>postgresql</artifactId>
+      <groupId>org.postgresql</groupId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <artifactId>logstash-logback-encoder</artifactId>
+      <groupId>net.logstash.logback</groupId>
+      <version>${logstash.encoder.version}</version>
+    </dependency>
+    <dependency>
+      <artifactId>jilt</artifactId>
+      <groupId>cc.jilt</groupId>
+      <scope>provided</scope>
+      <version>${jilt.version}</version>
+    </dependency>
+
+    <dependency>
+      <artifactId>jakarta.validation-api</artifactId>
+      <groupId>jakarta.validation</groupId>
+    </dependency>
+    <dependency>
+      <artifactId>hibernate-validator</artifactId>
+      <groupId>org.hibernate.validator</groupId>
+    </dependency>
+
+
+    <!-- Поддержка дев-среды (в том числе Testcontainers) -->
+    <dependency>
+      <artifactId>logix-devtools</artifactId>
+      <groupId>com.vazant.logix</groupId>
+      <optional>true</optional>
+      <scope>runtime</scope>
+      <version>${project.version}</version>
+    </dependency>
+
+    <!-- Генерация данных -->
+    <dependency>
+      <artifactId>logix-data-gen</artifactId>
+      <groupId>com.vazant.logix</groupId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <!-- Тестирование -->
+    <dependency>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <groupId>org.springframework.boot</groupId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <artifactId>spring-kafka-test</artifactId>
+      <groupId>org.springframework.kafka</groupId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <description>Order management microservice for Logix Platform</description>
+  <modelVersion>4.0.0</modelVersion>
+  <name>Logix :: Orders</name>
+  <parent>
+    <artifactId>logix-platform</artifactId>
+    <groupId>com.vazant.logix</groupId>
+    <version>1.0.0-SNAPSHOT</version>
+  </parent>
+  <properties>
+    <jilt.version>1.7</jilt.version>
+  </properties>
+</project>

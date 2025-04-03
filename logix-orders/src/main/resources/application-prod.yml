@@ -1,0 +1,24 @@
+server:
+  port: 80
+
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/orders_db
+    username: postgres
+    password: postgres
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+  kafka:
+    bootstrap-servers: kafka:9092
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+app:
+  data-generator:
+    enabled: false

@@ -1,0 +1,20 @@
+logix:
+  currency:
+    api-key: "424082e7f97545ad847d9d86bceabcf5"
+    api-url: https://api.currencyfreaks.com/latest
+    base-currency: USD
+    cron: "0 0 3 * * *"
+  retry:
+    maxAttempts: 3
+    initialDelay: 1000
+    multiplier: 2.0
+    maxDelay: 5000
+spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  cache:
+    type: redis
+    redis:
+      time-to-live: 86400000

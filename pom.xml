@@ -13,6 +13,7 @@
     <module>logix-data-gen</module>
     <module>logix-devtools</module>
     <module>logix-orders</module>
+    <module>logix-currency</module>
   </modules>
 
   <properties>

@@ -1,7 +1,8 @@
 package com.vazant.logix.orders.domain.customer;
 
-import com.vazant.logix.orders.common.BaseEntity;
-import com.vazant.logix.orders.sdk.utils.JiltBuilder;
+import com.vazant.logix.orders.domain.common.BaseEntity;
+import com.vazant.logix.orders.domain.common.Updatable;
+import com.vazant.logix.orders.infrastructure.utils.JiltBuilder;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -12,7 +13,7 @@ import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "customers")
-public class Customer extends BaseEntity {
+public class Customer extends BaseEntity implements Updatable<Customer> {
 
   @NotBlank(message = "First name is required")
   @Size(max = 100)
@@ -108,5 +109,18 @@ public class Customer extends BaseEntity {
 
   public String getCountry() {
     return country;
+  }
+
+  @Override
+  public void doUpdate(Customer updated) {
+    this.firstName = updated.getFirstName();
+    this.lastName = updated.getLastName();
+    this.email = updated.getEmail();
+    this.phone = updated.getPhone();
+    this.address = updated.getAddress();
+    this.city = updated.getCity();
+    this.state = updated.getState();
+    this.zip = updated.getZip();
+    this.country = updated.getCountry();
   }
 }

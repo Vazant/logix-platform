@@ -1,21 +1,27 @@
 package com.vazant.logix.orders.domain.order;
 
-import com.vazant.logix.orders.common.BaseEntity;
+import com.vazant.logix.orders.domain.common.BaseEntity;
+import com.vazant.logix.orders.domain.common.Updatable;
 import com.vazant.logix.orders.domain.customer.Customer;
 import com.vazant.logix.orders.domain.product.Product;
 import com.vazant.logix.orders.domain.shared.Currency;
 import com.vazant.logix.orders.domain.shared.Money;
-import com.vazant.logix.orders.sdk.utils.JiltBuilder;
+import com.vazant.logix.orders.infrastructure.utils.JiltBuilder;
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "orders")
-public class Order extends BaseEntity {
+public class Order extends BaseEntity implements Updatable<Order> {
+
+  @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+  private final List<Item> items = new ArrayList<>();
 
   @NotNull
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -35,18 +41,14 @@ public class Order extends BaseEntity {
   @Column(nullable = false)
   private OrderStatus status;
 
-  @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<Item> items;
-
   protected Order() {}
 
   @JiltBuilder
   public Order(Customer customer, String warehouseId, Money total, String description) {
-    this.customer = customer;
-    this.warehouseId = warehouseId;
-    this.total = total;
+    this.customer = Objects.requireNonNull(customer);
+    this.warehouseId = Objects.requireNonNull(warehouseId);
+    this.total = Objects.requireNonNull(total);
     this.description = description;
-    this.items = new ArrayList<>();
     this.status = OrderStatus.CREATED;
   }
 
@@ -71,41 +73,36 @@ public class Order extends BaseEntity {
   }
 
   public List<Item> getItems() {
-    return items;
+    return Collections.unmodifiableList(items); // защищаем от внешней мутации
   }
 
   public void updateStatus(OrderStatus newStatus) {
-    this.status = newStatus;
+    this.status = Objects.requireNonNull(newStatus);
   }
 
-  public void addItem(Item newItem) {
-    if (newItem == null) {
-      throw new IllegalArgumentException("Item must not be null");
-    }
+  public void addItem(Product product, int quantity, Money unitPrice) {
+    Objects.requireNonNull(product);
+    if (quantity <= 0) throw new IllegalArgumentException("Quantity must be positive");
 
     for (Item existing : items) {
-      if (existing.getProduct().equals(newItem.getProduct())) {
-        existing.increaseQuantity(newItem.getQuantity());
+      if (existing.getProduct().equals(product)) {
+        existing.increaseQuantity(quantity);
+        recalculateTotal();
         return;
       }
     }
 
-    newItem.setOrder(this);
-    items.add(newItem);
+    Item item = new Item(this, product, quantity, unitPrice);
+    items.add(item);
+    recalculateTotal();
   }
 
-  public void removeItemByProduct(Product product) {
-    if (product == null) {
-      throw new IllegalArgumentException("Product must not be null");
-    }
-
-    items.removeIf(item -> item.getProduct().equals(product));
+  public void removeItem(Product product) {
+    boolean removed = items.removeIf(item -> item.getProduct().equals(product));
+    if (removed) recalculateTotal();
   }
 
   public void updateItemQuantity(Product product, int newQuantity) {
-    if (product == null) throw new IllegalArgumentException("Product must not be null");
-    if (newQuantity < 0) throw new IllegalArgumentException("Quantity must be non-negative");
-
     for (Item item : items) {
       if (item.getProduct().equals(product)) {
         if (newQuantity == 0) {
@@ -113,14 +110,26 @@ public class Order extends BaseEntity {
         } else {
           item.setQuantity(newQuantity);
         }
+        recalculateTotal();
         return;
       }
     }
-
     throw new IllegalArgumentException("Item with product not found in order");
   }
 
   public Money calculateTotal(Currency currency) {
     return items.stream().map(Item::getSubtotal).reduce(Money.zero(currency), Money::add);
+  }
+
+  private void recalculateTotal() {
+    this.total = calculateTotal(total.getCurrency());
+  }
+
+  @Override
+  public void doUpdate(Order updated) {
+    this.description = updated.getDescription();
+    this.status = updated.getStatus();
+    this.warehouseId = updated.getWarehouseId();
+    this.customer = updated.getCustomer();
   }
 }

@@ -51,6 +51,12 @@
       <groupId>org.hibernate.validator</groupId>
     </dependency>
 
+    <dependency>
+      <artifactId>logix-currency</artifactId>
+      <groupId>com.vazant.logix</groupId>
+      <scope>compile</scope>
+      <version>${project.version}</version>
+    </dependency>
 
     <!-- Поддержка дев-среды (в том числе Testcontainers) -->
     <dependency>

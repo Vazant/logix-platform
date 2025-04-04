@@ -1,52 +1,51 @@
 package com.vazant.logix.currency.service;
 
+import com.vazant.logix.currency.api.RequiredCurrencyProvider;
 import com.vazant.logix.currency.config.CurrencyProperties;
 import com.vazant.logix.currency.model.CurrencyRate;
 import com.vazant.logix.currency.model.CurrencyRatesResponse;
 import jakarta.annotation.PostConstruct;
 import java.math.BigDecimal;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
+import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.client.RestTemplate;
 
 @Service
-@Validated
-@CacheConfig(cacheNames = "currencyRates")
 public class CurrencyService {
 
   private static final Logger log = LoggerFactory.getLogger(CurrencyService.class);
 
   private final CurrencyProperties properties;
   private final RestTemplate restTemplate;
-  private final Map<String, CurrencyRate> localCache = new ConcurrentHashMap<>();
+  private final RequiredCurrencyProvider currencyProvider;
+  private final CurrencyCacheService currencyCacheService;
 
-  public CurrencyService(CurrencyProperties properties, RestTemplate restTemplate) {
+  public CurrencyService(
+      CurrencyProperties properties,
+      RestTemplate restTemplate,
+      RequiredCurrencyProvider currencyProvider,
+      CurrencyCacheService currencyCacheService) {
     this.properties = properties;
     this.restTemplate = restTemplate;
+    this.currencyProvider = currencyProvider;
+    this.currencyCacheService = currencyCacheService;
   }
 
   @PostConstruct
   public void init() {
-    fetchExchangeRates(); // вручную запускаем при старте
+    fetchExchangeRates(); // запрашиваем курсы при запуске
+    validateStartupRates(); // убеждаемся, что нужные валюты загружены
     logStartupConfig();
   }
 
-  @Scheduled(cron = "${logix.currency.cron:0 0 0 * * *}")
-  public void fetchExchangeRates() {
-    doFetchRates();
-  }
-
+  @Scheduled(cron = "${logix.currency.cron:0 0 3 * * *}")
   @Retryable
-  private void doFetchRates() {
-    log.info("Fetching currency exchange rates...");
+  public void fetchExchangeRates() {
+    log.info("📥 Fetching currency exchange rates...");
 
     try {
       String url =
@@ -57,54 +56,64 @@ public class CurrencyService {
       CurrencyRatesResponse response = restTemplate.getForObject(url, CurrencyRatesResponse.class);
 
       if (response != null && response.rates() != null) {
+        Instant now = Instant.now();
         response
             .rates()
             .forEach(
                 (code, rateStr) -> {
                   try {
                     BigDecimal rate = new BigDecimal(rateStr);
-                    localCache.put(code, new CurrencyRate(code, rate));
+                    currencyCacheService.saveRate(
+                        new CurrencyRate(code, rate, properties.getBaseCurrency(), now));
                   } catch (NumberFormatException ex) {
-                    log.warn("Invalid rate format: {} = {}", code, rateStr);
+                    log.warn("❌ Invalid rate format: {} = {}", code, rateStr);
                   }
                 });
 
-        log.info("Exchange rates updated: {} currencies", localCache.size());
+        log.info("✅ Exchange rates updated: {}", response.rates().size());
       }
 
     } catch (Exception e) {
-      log.error("Error fetching currency rates", e);
-      throw e; // для Retry
+      log.error("🚨 Error fetching currency rates", e);
+      throw e;
     }
   }
 
-  public Optional<CurrencyRate> getRate(String currencyCode) {
-    return Optional.ofNullable(localCache.get(currencyCode));
-  }
+  public BigDecimal convert(String from, String to, BigDecimal amount) {
+    if (from.equalsIgnoreCase(to)) return amount;
 
-  public BigDecimal convert(String fromCurrency, String toCurrency, BigDecimal amount) {
-    if (fromCurrency.equalsIgnoreCase(toCurrency)) return amount;
-
-    CurrencyRate from = localCache.get(fromCurrency);
-    CurrencyRate to = localCache.get(toCurrency);
-
-    if (from == null || to == null) {
-      throw new IllegalStateException(
-          "Currency rate not found for: %s → %s".formatted(fromCurrency, toCurrency));
-    }
+    CurrencyRate fromRate = currencyCacheService.getRate(from);
+    CurrencyRate toRate = currencyCacheService.getRate(to);
 
     return amount
-        .multiply(to.rate())
-        .divide(from.rate(), properties.getScale(), properties.getRoundingMode());
+        .multiply(toRate.rate())
+        .divide(fromRate.rate(), properties.getScale(), properties.getRoundingMode());
+  }
+
+  public void validateStartupRates() {
+    for (String code : currencyProvider.getRequiredCurrencyCodes()) {
+      try {
+        currencyCacheService.getRate(code);
+      } catch (Exception e) {
+        log.warn("⚠️ Missing exchange rate for currency: {}", code);
+      }
+    }
   }
 
   private void logStartupConfig() {
     log.info(
-        "CurrencyService initialized with baseCurrency={}, providerUrl={}, cron={}, scale={}, rounding={}",
+        """
+        CurrencyService config:
+        - baseCurrency: {}
+        - providerUrl: {}
+        - cron: {}
+        - roundingMode: {}
+        - scale: {}
+        """,
         properties.getBaseCurrency(),
         properties.getProviderUrl(),
         properties.getCron(),
-        properties.getScale(),
-        properties.getRoundingMode());
+        properties.getRoundingMode(),
+        properties.getScale());
   }
 }

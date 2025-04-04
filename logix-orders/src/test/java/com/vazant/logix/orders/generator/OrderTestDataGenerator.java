@@ -2,9 +2,9 @@ package com.vazant.logix.orders.generator;
 
 import com.vazant.logix.datagen.generator.TestDataGenerator;
 import com.vazant.logix.datagen.utils.GeneratorUtils;
-import com.vazant.logix.orders.domain.OrderBuilder;
 import com.vazant.logix.orders.domain.order.Order;
-import com.vazant.logix.orders.repository.OrderRepository;
+import com.vazant.logix.orders.domain.order.OrderBuilder;
+import com.vazant.logix.orders.infrastructure.repository.order.OrderRepository;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.IntStream;

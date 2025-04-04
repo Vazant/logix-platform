@@ -1,9 +1,10 @@
 package com.vazant.logix.orders.domain.order;
 
-import com.vazant.logix.orders.common.BaseEntity;
+import com.vazant.logix.orders.domain.common.BaseEntity;
+import com.vazant.logix.orders.domain.common.Updatable;
 import com.vazant.logix.orders.domain.product.Product;
 import com.vazant.logix.orders.domain.shared.Money;
-import com.vazant.logix.orders.sdk.utils.JiltBuilder;
+import com.vazant.logix.orders.infrastructure.utils.JiltBuilder;
 import jakarta.persistence.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -12,7 +13,7 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(name = "order_items")
-public class Item extends BaseEntity {
+public class Item extends BaseEntity implements Updatable<Item> {
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "order_id", nullable = false)
@@ -87,5 +88,18 @@ public class Item extends BaseEntity {
 
   public Money getSubtotal() {
     return unitPrice.multiply(quantity);
+  }
+
+  @Override
+  public void doUpdate(Item updated) {
+    if (updated.getProduct() != null) {
+      this.setProduct(updated.getProduct());
+    }
+
+    if (updated.getUnitPrice() != null) {
+      this.setUnitPrice(updated.getUnitPrice());
+    }
+
+    this.setQuantity(updated.getQuantity());
   }
 }

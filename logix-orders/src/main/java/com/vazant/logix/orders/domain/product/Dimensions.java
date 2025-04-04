@@ -1,6 +1,6 @@
 package com.vazant.logix.orders.domain.product;
 
-import com.vazant.logix.orders.sdk.utils.JiltBuilder;
+import com.vazant.logix.orders.infrastructure.utils.JiltBuilder;
 import jakarta.persistence.Embeddable;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;

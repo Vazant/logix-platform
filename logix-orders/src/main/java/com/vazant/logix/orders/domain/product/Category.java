@@ -1,7 +1,8 @@
 package com.vazant.logix.orders.domain.product;
 
-import com.vazant.logix.orders.common.BaseEntity;
-import com.vazant.logix.orders.sdk.utils.JiltBuilder;
+import com.vazant.logix.orders.domain.common.BaseEntity;
+import com.vazant.logix.orders.domain.common.Updatable;
+import com.vazant.logix.orders.infrastructure.utils.JiltBuilder;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
@@ -9,7 +10,7 @@ import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "categories")
-public class Category extends BaseEntity {
+public class Category extends BaseEntity implements Updatable<Category> {
 
   @NotBlank(message = "Name must not be blank")
   private String name;
@@ -31,5 +32,11 @@ public class Category extends BaseEntity {
 
   public String getDescription() {
     return description;
+  }
+
+  @Override
+  public void doUpdate(Category updated) {
+    this.name = updated.getName();
+    this.description = updated.getDescription();
   }
 }

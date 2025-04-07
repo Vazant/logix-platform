@@ -16,11 +16,11 @@ import java.math.BigDecimal;
 public class Item extends BaseEntity implements Updatable<Item> {
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "order_id", nullable = false)
+  @JoinColumn(name = "order_uuid", nullable = false)
   private Order order;
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "product_id", nullable = false)
+  @JoinColumn(name = "product_uuid", nullable = false)
   private Product product;
 
   @Min(1)

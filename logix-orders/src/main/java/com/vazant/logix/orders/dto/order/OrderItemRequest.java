@@ -1,9 +1,9 @@
 package com.vazant.logix.orders.dto.order;
 
-import com.vazant.logix.orders.domain.shared.Money;
+import com.vazant.logix.orders.dto.shared.MoneyRequest;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record OrderItemRequest(
-    @NotBlank String productId, @Min(1) int quantity, @NotNull Money price) {}
+    @NotBlank String productUuid, @Min(1) int quantity, @NotNull MoneyRequest price) {}

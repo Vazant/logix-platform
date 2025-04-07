@@ -19,7 +19,7 @@ public class ProductPrice extends BaseEntity implements Updatable<ProductPrice> 
 
   @NotNull(message = "Product must not be null")
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "product_id", nullable = false)
+  @JoinColumn(name = "product_uuid", nullable = false)
   private Product product;
 
   @NotNull(message = "Price must not be null")

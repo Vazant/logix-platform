@@ -3,6 +3,8 @@ package com.vazant.logix.orders.domain.order;
 import com.vazant.logix.orders.domain.common.BaseEntity;
 import com.vazant.logix.orders.domain.common.Updatable;
 import com.vazant.logix.orders.domain.customer.Customer;
+import com.vazant.logix.orders.domain.event.DomainEventPublisher;
+import com.vazant.logix.orders.domain.event.OrderStatusChangedEvent;
 import com.vazant.logix.orders.domain.product.Product;
 import com.vazant.logix.orders.domain.shared.Currency;
 import com.vazant.logix.orders.domain.shared.Money;
@@ -25,7 +27,7 @@ public class Order extends BaseEntity implements Updatable<Order> {
 
   @NotNull
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "customer_id", nullable = false)
+  @JoinColumn(name = "customer_uuid", nullable = false)
   private Customer customer;
 
   @NotNull
@@ -77,7 +79,17 @@ public class Order extends BaseEntity implements Updatable<Order> {
   }
 
   public void updateStatus(OrderStatus newStatus) {
-    this.status = Objects.requireNonNull(newStatus);
+    Objects.requireNonNull(newStatus);
+    if (!this.status.canTransitionTo(newStatus)) {
+      throw new IllegalArgumentException(
+          "Невозможно изменить статус из " + this.status + " на " + newStatus);
+    }
+    OrderStatus previousStatus = this.status;
+    this.status = newStatus;
+
+    OrderStatusChangedEvent event =
+        new OrderStatusChangedEvent(this.getUuid().toString(), previousStatus, newStatus);
+    DomainEventPublisher.publish(event);
   }
 
   public void addItem(Product product, int quantity, Money unitPrice) {
@@ -92,7 +104,14 @@ public class Order extends BaseEntity implements Updatable<Order> {
       }
     }
 
-    Item item = new Item(this, product, quantity, unitPrice);
+    Item item =
+        ItemBuilder.item()
+            .order(this)
+            .product(product)
+            .quantity(quantity)
+            .unitPrice(unitPrice)
+            .build();
+
     items.add(item);
     recalculateTotal();
   }
@@ -128,8 +147,11 @@ public class Order extends BaseEntity implements Updatable<Order> {
   @Override
   public void doUpdate(Order updated) {
     this.description = updated.getDescription();
-    this.status = updated.getStatus();
     this.warehouseId = updated.getWarehouseId();
     this.customer = updated.getCustomer();
+
+    if (!this.status.equals(updated.getStatus())) {
+      this.updateStatus(updated.getStatus());
+    }
   }
 }

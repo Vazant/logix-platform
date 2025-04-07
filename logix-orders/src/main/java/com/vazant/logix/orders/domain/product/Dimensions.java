@@ -11,21 +11,26 @@ public class Dimensions {
 
   @NotNull(message = "Width must not be null")
   @PositiveOrZero(message = "Width must be positive or zero")
-  private BigDecimal width;
+  private final BigDecimal width;
 
   @NotNull(message = "Height must not be null")
   @PositiveOrZero(message = "Height must be positive or zero")
-  private BigDecimal height;
+  private final BigDecimal height;
 
   @NotNull(message = "Length must not be null")
   @PositiveOrZero(message = "Length must be positive or zero")
-  private BigDecimal length;
+  private final BigDecimal length;
 
   @NotNull(message = "Weight must not be null")
   @PositiveOrZero(message = "Weight must be positive or zero")
-  private BigDecimal weight;
+  private final BigDecimal weight;
 
-  protected Dimensions() {}
+  protected Dimensions() {
+    this.width = BigDecimal.ZERO;
+    this.height = BigDecimal.ZERO;
+    this.length = BigDecimal.ZERO;
+    this.weight = BigDecimal.ZERO;
+  }
 
   @JiltBuilder
   public Dimensions(BigDecimal width, BigDecimal height, BigDecimal length, BigDecimal weight) {

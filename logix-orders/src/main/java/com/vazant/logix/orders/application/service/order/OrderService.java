@@ -50,7 +50,7 @@ public class OrderService extends AbstractCrudService<Order> {
         OrderBuilder.order()
             .customer(customer)
             .warehouseId(request.warehouseUuid())
-            .total(request.total())
+            .total(request.total().toDomain())
             .description(request.description())
             .build();
 
@@ -58,8 +58,8 @@ public class OrderService extends AbstractCrudService<Order> {
         .items()
         .forEach(
             itemRequest -> {
-              Product product = productService.findByUuid(itemRequest.productId());
-              order.addItem(product, itemRequest.quantity(), itemRequest.price());
+              Product product = productService.findByUuid(itemRequest.productUuid());
+              order.addItem(product, itemRequest.quantity(), itemRequest.price().toDomain());
             });
 
     return super.create(order);

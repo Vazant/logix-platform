@@ -2,6 +2,18 @@ server:
   port: 8080
 
 spring:
+  mail:
+    host: localhost
+    port: 3025
+    protocol: smtp
+    username: dummy
+    password: dummy
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
   datasource:
     url: jdbc:postgresql://localhost:5433/orders_db
     username: postgres

@@ -43,6 +43,11 @@ public class GlobalExceptionHandler {
     return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), null);
   }
 
+  @ExceptionHandler(EmailDeliveryException.class)
+  public ResponseEntity<Object> handleMail(EmailDeliveryException ex) {
+    return buildResponse(HttpStatus.BAD_GATEWAY, "Email delivery failed", ex.getMessage());
+  }
+
   private ResponseEntity<Object> buildResponse(HttpStatus status, String message, Object errors) {
     var body =
         Map.of(

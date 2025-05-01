@@ -1,6 +1,0 @@
-logix:
-  currency:
-    api-key: "424082e7f97545ad847d9d86bceabcf5"
-    provider-url: https://api.currencyfreaks.com/latest
-    base-currency: USD
-    cron: "*/30 * * * * *" # каждые 30 сек для теста

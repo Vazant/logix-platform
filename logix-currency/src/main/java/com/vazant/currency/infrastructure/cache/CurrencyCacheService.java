@@ -1,6 +1,6 @@
-package com.vazant.logix.currency.service;
+package com.vazant.currency.infrastructure.cache;
 
-import com.vazant.logix.currency.model.CurrencyRate;
+import com.vazant.currency.domain.model.CurrencyRate;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -12,10 +12,10 @@ public class CurrencyCacheService {
 
   @Cacheable(key = "#currencyCode")
   public CurrencyRate getRate(String currencyCode) {
-    throw new IllegalStateException("Currency %s not cached yet".formatted(currencyCode));
+    throw new IllegalStateException("❌ Rate not cached yet: " + currencyCode);
   }
 
-  @CachePut(key = "#rate.currency()")
+  @CachePut(key = "#rate.targetCurrencyCode()")
   public CurrencyRate saveRate(CurrencyRate rate) {
     return rate;
   }

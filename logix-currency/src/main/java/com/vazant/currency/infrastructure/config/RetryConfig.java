@@ -1,4 +1,4 @@
-package com.vazant.logix.currency.config;
+package com.vazant.currency.infrastructure.config;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -12,19 +12,17 @@ import org.springframework.retry.support.RetryTemplate;
 @EnableRetry
 @EnableConfigurationProperties(CurrencyProperties.class)
 public class RetryConfig {
-
   @Bean
-  public RetryTemplate retryTemplate(CurrencyProperties currencyProperties) {
+  public RetryTemplate retryTemplate(CurrencyProperties properties) {
     RetryTemplate template = new RetryTemplate();
 
-    var backOffPolicy = new ExponentialBackOffPolicy();
-    backOffPolicy.setInitialInterval(currencyProperties.getRetry().getInitialDelay());
-    backOffPolicy.setMultiplier(currencyProperties.getRetry().getMultiplier());
-    backOffPolicy.setMaxInterval(currencyProperties.getRetry().getMaxDelay());
-    template.setBackOffPolicy(backOffPolicy);
+    ExponentialBackOffPolicy backOff = new ExponentialBackOffPolicy();
+    backOff.setInitialInterval(properties.getRetry().getInitialDelay());
+    backOff.setMultiplier(properties.getRetry().getMultiplier());
+    backOff.setMaxInterval(properties.getRetry().getMaxDelay());
 
-    var retryPolicy = new SimpleRetryPolicy(currencyProperties.getRetry().getMaxAttempts());
-    template.setRetryPolicy(retryPolicy);
+    template.setBackOffPolicy(backOff);
+    template.setRetryPolicy(new SimpleRetryPolicy(properties.getRetry().getMaxAttempts()));
 
     return template;
   }

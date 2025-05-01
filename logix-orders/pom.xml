@@ -55,13 +55,6 @@
       <groupId>org.hibernate.validator</groupId>
     </dependency>
 
-    <dependency>
-      <artifactId>logix-currency</artifactId>
-      <groupId>com.vazant.logix</groupId>
-      <scope>compile</scope>
-      <version>${project.version}</version>
-    </dependency>
-
     <!-- https://mvnrepository.com/artifact/gg.jte/jte -->
     <dependency>
       <artifactId>jte</artifactId>

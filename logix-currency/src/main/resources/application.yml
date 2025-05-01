@@ -1,27 +1,41 @@
+currency:
+  schedule-cron: "0 0 3 * * *"
+  api-key: "424082e7f97545ad847d9d86bceabcf5"
+  provider-url: "https://api.currencyfreaks.com/v2.0/rates/latest"
+  base-currency: "USD"
+  scale: 4
+  rounding-mode: "HALF_EVEN"
+
+  retry:
+    max-attempts: 3
+    initial-delay: 1000
+    multiplier: 2.0
+    max-delay: 5000
+
+  redis:
+    ttl-hours: 24
+    ttl-currency-rates-hours: 12
+  rest:
+    connectTimeout: 5
+    readTimeout: 5
+  kafka:
+    request-topic: currency.requests
+    reply-topic-prefix: currency.replies.
+
 spring:
+  cache:
+    type: redis
   data:
     redis:
       host: localhost
       port: 6379
-  cache:
-    type: redis
-
-logix:
-  currency:
-    api-key: "424082e7f97545ad847d9d86bceabcf5"
-    provider-url: https://api.currencyfreaks.com/latest
-    base-currency: USD
-    cron: "0 0 3 * * *"
-    retry:
-      maxAttempts: 3
-      initialDelay: 1000
-      multiplier: 2.0
-      maxDelay: 5000
-    redis:
-      time-to-live: 24
-      time-to-live-currency-rates: 12
-    rest-template:
-      connect-timeout: 5
-      read-timeout: 5
-    rounding-mode: HALF_EVEN
-    scale: 4
+  application:
+    name: currency-service
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: currency-group
+      auto-offset-reset: earliest
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer

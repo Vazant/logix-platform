@@ -2,6 +2,7 @@ package com.vazant.logix.orders.presentation.controller.user;
 
 import com.vazant.logix.orders.application.service.user.UserGroupService;
 import com.vazant.logix.orders.domain.user.UserGroup;
+import com.vazant.logix.orders.dto.user.UserGroupResponsibilityRequest;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

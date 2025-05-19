@@ -45,7 +45,11 @@
       <scope>provided</scope>
       <version>${jilt.version}</version>
     </dependency>
-
+    <dependency>
+      <artifactId>lombok</artifactId>
+      <groupId>org.projectlombok</groupId>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <artifactId>jakarta.validation-api</artifactId>
       <groupId>jakarta.validation</groupId>
@@ -78,7 +82,6 @@
       <version>${greenmail.version}</version>
     </dependency>
 
-
     <!-- Поддержка дев-среды (в том числе Testcontainers) -->
     <dependency>
       <artifactId>logix-devtools</artifactId>
@@ -105,6 +108,12 @@
       <artifactId>spring-kafka-test</artifactId>
       <groupId>org.springframework.kafka</groupId>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <artifactId>logix-kafka-shared</artifactId>
+      <groupId>com.vazant.logix</groupId>
+      <scope>compile</scope>
+      <version>1.0.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
 

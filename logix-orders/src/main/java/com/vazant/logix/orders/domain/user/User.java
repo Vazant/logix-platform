@@ -11,10 +11,13 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.Setter;
+import org.jilt.Opt;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+@Setter
 @Entity
 @Table(name = "users")
 public class User extends BaseEntity implements UserDetails, Updatable<User> {
@@ -55,7 +58,8 @@ public class User extends BaseEntity implements UserDetails, Updatable<User> {
   public User() {}
 
   @JiltBuilder
-  public User(String username, String email, String password, String pictureUrl, Person person) {
+  public User(
+      String username, String email, String password, Person person, @Opt String pictureUrl) {
     this.username = username;
     this.email = email;
     this.password = password;
@@ -69,10 +73,6 @@ public class User extends BaseEntity implements UserDetails, Updatable<User> {
 
   public Organization getOrganization() {
     return organization;
-  }
-
-  public void setOrganization(Organization organization) {
-    this.organization = organization;
   }
 
   @Override
@@ -100,17 +100,9 @@ public class User extends BaseEntity implements UserDetails, Updatable<User> {
     return password;
   }
 
-  public void setPassword(String password) {
-    this.password = password;
-  }
-
   @Override
   public String getUsername() {
     return username;
-  }
-
-  public void setUsername(String username) {
-    this.username = username;
   }
 
   @Override
@@ -133,39 +125,19 @@ public class User extends BaseEntity implements UserDetails, Updatable<User> {
     return enabled;
   }
 
-  public void setEnabled(boolean enabled) {
-    this.enabled = enabled;
-  }
-
   public String getEmail() {
     return email;
-  }
-
-  public void setEmail(String email) {
-    this.email = email;
   }
 
   public String getPictureUrl() {
     return pictureUrl;
   }
 
-  public void setPictureUrl(String pictureUrl) {
-    this.pictureUrl = pictureUrl;
-  }
-
   public Person getPerson() {
     return person;
   }
 
-  public void setPerson(Person person) {
-    this.person = person;
-  }
-
   public Set<UserGroup> getGroups() {
     return groups;
-  }
-
-  public void setGroups(Set<UserGroup> groups) {
-    this.groups = groups;
   }
 }

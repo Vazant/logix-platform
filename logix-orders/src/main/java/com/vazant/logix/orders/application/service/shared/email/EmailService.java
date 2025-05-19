@@ -40,7 +40,7 @@ public class EmailService {
       helper.setText(html, true);
       mailSender.send(message);
     } catch (MessagingException e) {
-      throw throw new EmailDeliveryException(to, e);
+      throw new EmailDeliveryException(to, e);
     }
   }
 }

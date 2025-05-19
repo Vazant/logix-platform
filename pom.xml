@@ -14,6 +14,7 @@
     <module>logix-devtools</module>
     <module>logix-orders</module>
     <module>logix-currency</module>
+    <module>logix-kafka-shared</module>
   </modules>
 
   <properties>

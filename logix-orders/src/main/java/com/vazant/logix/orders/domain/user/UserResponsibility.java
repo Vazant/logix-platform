@@ -3,24 +3,41 @@ package com.vazant.logix.orders.domain.user;
 import com.vazant.logix.orders.domain.common.BaseEntity;
 import com.vazant.logix.orders.domain.common.Updatable;
 import com.vazant.logix.orders.infrastructure.utils.JiltBuilder;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "user_responsibilities")
 public class UserResponsibility extends BaseEntity implements Updatable<UserResponsibility> {
 
-  @NotBlank private String name; // Например, "MANAGE_ORDERS", "VIEW_REPORTS" и т.д.
-
-  private String description;
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private SystemResponsibility responsibility;
 
   public UserResponsibility() {}
 
   @JiltBuilder
-  public UserResponsibility(String name, String description) {
-    this.name = name;
-    this.description = description;
+  public UserResponsibility(SystemResponsibility responsibility) {
+    this.responsibility = responsibility;
+  }
+
+  public SystemResponsibility getResponsibility() {
+    return responsibility;
+  }
+
+  public void setResponsibility(SystemResponsibility responsibility) {
+    this.responsibility = responsibility;
+  }
+
+  public String getName() {
+    return responsibility.getName();
+  }
+
+  public String getAuthority() {
+    return responsibility.name();
   }
 
   @Override
@@ -28,23 +45,6 @@ public class UserResponsibility extends BaseEntity implements Updatable<UserResp
     if (updated == null) {
       throw new IllegalArgumentException("Updated UserResponsibility must not be null");
     }
-    this.name = updated.getName();
-    this.description = updated.getDescription();
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  public String getDescription() {
-    return description;
-  }
-
-  public void setDescription(String description) {
-    this.description = description;
+    this.responsibility = updated.getResponsibility();
   }
 }

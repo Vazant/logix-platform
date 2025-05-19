@@ -1,14 +1,13 @@
 package com.vazant.logix.orders.application.service.order;
 
-import com.vazant.logix.currency.service.CurrencyService;
 import com.vazant.logix.orders.application.service.common.AbstractCrudService;
 import com.vazant.logix.orders.application.service.customer.CustomerService;
 import com.vazant.logix.orders.application.service.product.ProductService;
 import com.vazant.logix.orders.domain.order.Order;
 import com.vazant.logix.orders.domain.order.OrderBuilder;
 import com.vazant.logix.orders.domain.product.Product;
-import com.vazant.logix.orders.domain.shared.Money;
 import com.vazant.logix.orders.dto.order.OrderRequest;
+import com.vazant.logix.orders.infrastructure.kafka.CurrencyConversionClient;
 import com.vazant.logix.orders.infrastructure.repository.order.OrderRepository;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
@@ -22,18 +21,18 @@ public class OrderService extends AbstractCrudService<Order> {
   private final OrderRepository repository;
   private final CustomerService customerService;
   private final ProductService productService;
-  private final CurrencyService currencyService;
+  private final CurrencyConversionClient currencyClient;
 
   public OrderService(
       OrderRepository repository,
       CustomerService customerService,
       ProductService productService,
-      CurrencyService currencyService) {
+      CurrencyConversionClient currencyClient) {
     super(Order.class);
     this.repository = repository;
     this.customerService = customerService;
     this.productService = productService;
-    this.currencyService = currencyService;
+    this.currencyClient = currencyClient;
   }
 
   @Override
@@ -67,9 +66,9 @@ public class OrderService extends AbstractCrudService<Order> {
 
   public BigDecimal calculateTotalIn(String orderUuid, String targetCurrency) {
     var order = findByUuid(orderUuid);
-    Money total = order.getTotal();
+    var total = order.getTotal();
 
-    return currencyService.convert(total.getCurrency().name(), targetCurrency, total.getAmount());
+    return currencyClient.convert(total.getCurrency().name(), targetCurrency, total.getAmount());
   }
 
   private void validateRequest(OrderRequest request) {
@@ -79,7 +78,7 @@ public class OrderService extends AbstractCrudService<Order> {
     if (!StringUtils.hasText(request.warehouseUuid())) {
       throw new IllegalArgumentException("Warehouse ID must not be empty");
     }
-    if (request.total() == null || request.total().getAmount().doubleValue() <= 0) {
+    if (request.total() == null || request.total().amount().doubleValue() <= 0) {
       throw new IllegalArgumentException("Total amount must be positive");
     }
   }

@@ -75,7 +75,7 @@ public class Order extends BaseEntity implements Updatable<Order> {
   }
 
   public List<Item> getItems() {
-    return Collections.unmodifiableList(items); // защищаем от внешней мутации
+    return Collections.unmodifiableList(items);
   }
 
   public void updateStatus(OrderStatus newStatus) {

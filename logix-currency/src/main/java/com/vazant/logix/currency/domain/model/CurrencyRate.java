@@ -1,5 +1,7 @@
 package com.vazant.logix.currency.domain.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
@@ -14,8 +16,12 @@ public class CurrencyRate {
   private final String baseCurrencyCode;
   private final Instant updatedAt;
 
+  @JsonCreator
   public CurrencyRate(
-      String targetCurrencyCode, BigDecimal rate, String baseCurrencyCode, Instant updatedAt) {
+      @JsonProperty("targetCurrencyCode") String targetCurrencyCode,
+      @JsonProperty("rate") BigDecimal rate,
+      @JsonProperty("baseCurrencyCode") String baseCurrencyCode,
+      @JsonProperty("updatedAt") Instant updatedAt) {
     if (rate == null || rate.compareTo(BigDecimal.ZERO) <= 0) {
       throw new IllegalArgumentException("Rate must be positive");
     }

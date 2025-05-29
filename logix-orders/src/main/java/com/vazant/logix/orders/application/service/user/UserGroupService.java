@@ -29,11 +29,9 @@ public class UserGroupService extends AbstractCrudService<UserGroup> {
   public UserGroup update(String groupUuid, UserGroup updatedGroup) {
     UserGroup existingGroup = findByUuid(groupUuid);
     existingGroup.doUpdate(updatedGroup);
-    // Коллекции (users, responsibilities) не обновляются здесь — используйте бизнес-методы ниже.
     return userGroupRepository.save(existingGroup);
   }
 
-  // Бизнес-метод для добавления пользователя в группу
   @Transactional
   public UserGroup addUser(String groupUuid, User user) {
     UserGroup group = findByUuid(groupUuid);
@@ -41,7 +39,6 @@ public class UserGroupService extends AbstractCrudService<UserGroup> {
     return userGroupRepository.save(group);
   }
 
-  // Бизнес-метод для удаления пользователя из группы
   @Transactional
   public UserGroup removeUser(String groupUuid, User user) {
     UserGroup group = findByUuid(groupUuid);
@@ -49,7 +46,6 @@ public class UserGroupService extends AbstractCrudService<UserGroup> {
     return userGroupRepository.save(group);
   }
 
-  // Бизнес-метод для добавления обязанности в группу
   @Transactional
   public UserGroup addResponsibility(String groupUuid, UserResponsibility responsibility) {
     UserGroup group = findByUuid(groupUuid);
@@ -57,7 +53,6 @@ public class UserGroupService extends AbstractCrudService<UserGroup> {
     return userGroupRepository.save(group);
   }
 
-  // Бизнес-метод для удаления обязанности из группы
   @Transactional
   public UserGroup removeResponsibility(String groupUuid, UserResponsibility responsibility) {
     UserGroup group = findByUuid(groupUuid);

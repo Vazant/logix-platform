@@ -38,7 +38,6 @@ public class Organization extends BaseEntity implements Updatable<Organization> 
     this.phoneNumber = phoneNumber;
   }
 
-  // Getters and Setters
   public String getName() {
     return name;
   }
@@ -79,7 +78,6 @@ public class Organization extends BaseEntity implements Updatable<Organization> 
     this.users = users;
   }
 
-  // Updatable implementation
   @Override
   public void doUpdate(Organization updated) {
     this.name = updated.name;

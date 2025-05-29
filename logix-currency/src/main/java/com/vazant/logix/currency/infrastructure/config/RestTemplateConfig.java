@@ -12,6 +12,7 @@ import org.springframework.web.client.RestTemplate;
 @EnableConfigurationProperties(CurrencyProperties.class)
 @RequiredArgsConstructor
 public class RestTemplateConfig {
+
   private final CurrencyProperties properties;
 
   @Bean

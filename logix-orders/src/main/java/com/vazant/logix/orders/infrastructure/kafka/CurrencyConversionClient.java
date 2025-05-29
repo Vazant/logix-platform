@@ -1,5 +1,6 @@
 package com.vazant.logix.orders.infrastructure.kafka;
 
+import com.vazant.logix.shared.kafka.config.KafkaTopics;
 import com.vazant.logix.shared.kafka.dto.CurrencyConversionRequest;
 import com.vazant.logix.shared.kafka.dto.CurrencyConversionResponse;
 import java.math.BigDecimal;
@@ -9,14 +10,13 @@ import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.springframework.kafka.requestreply.ReplyingKafkaTemplate;
+import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
 public class CurrencyConversionClient {
 
-  private static final String REQUEST_TOPIC = "currency.requests";
-  private static final String REPLY_TOPIC = "currency.replies";
   private final ReplyingKafkaTemplate<String, CurrencyConversionRequest, CurrencyConversionResponse>
       replyingKafkaTemplate;
 
@@ -26,9 +26,11 @@ public class CurrencyConversionClient {
     CurrencyConversionRequest request = new CurrencyConversionRequest(from, to, amount);
 
     ProducerRecord<String, CurrencyConversionRequest> record =
-        new ProducerRecord<>(REQUEST_TOPIC, null, request);
-    record.headers().add(new RecordHeader("reply-topic", REPLY_TOPIC.getBytes()));
-    record.headers().add(new RecordHeader("correlation-id", correlationId.getBytes()));
+        new ProducerRecord<>(KafkaTopics.CURRENCY_REQUESTS, null, request);
+    record
+        .headers()
+        .add(new RecordHeader(KafkaHeaders.REPLY_TOPIC, KafkaTopics.CURRENCY_REPLIES.getBytes()));
+    record.headers().add(new RecordHeader(KafkaHeaders.CORRELATION_ID, correlationId.getBytes()));
 
     try {
       var future = replyingKafkaTemplate.sendAndReceive(record);

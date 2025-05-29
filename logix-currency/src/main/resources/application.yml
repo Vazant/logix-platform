@@ -5,6 +5,7 @@ currency:
   base-currency: "USD"
   scale: 4
   rounding-mode: "HALF_EVEN"
+  cache-name: currencyRates
 
   retry:
     max-attempts: 3
@@ -35,7 +36,13 @@ spring:
     bootstrap-servers: localhost:9092
     consumer:
       group-id: currency-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       auto-offset-reset: earliest
+    properties:
+      spring.json.trusted.packages: "com.vazant.logix.shared.kafka.dto"
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+server:
+  port: 8081

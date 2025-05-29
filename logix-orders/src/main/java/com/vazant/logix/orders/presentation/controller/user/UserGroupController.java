@@ -48,20 +48,11 @@ public class UserGroupController {
     return ResponseEntity.noContent().build();
   }
 
-  // Пример эндпоинта для добавления обязанности в группу
   @PostMapping("/{groupUuid}/responsibilities")
   public ResponseEntity<UserGroup> addResponsibility(
       @PathVariable String groupUuid, @RequestBody UserGroupResponsibilityRequest request) {
-    // UserGroupResponsibilityRequest — DTO, содержащий данные для создания или поиска обязанности
-    // Здесь предполагается, что вы реализуете логику конвертации DTO в UserResponsibility
-    // Например:
-    // UserResponsibility responsibility = convertToUserResponsibility(request);
-    // Для простоты примера, пусть request уже является объектом UserResponsibility
     UserGroup updatedGroup =
         userGroupService.addResponsibility(groupUuid, request.getResponsibility());
     return ResponseEntity.ok(updatedGroup);
   }
-
-  // Аналогичный эндпоинт можно сделать для удаления обязанности или добавления/удаления
-  // пользователей
 }

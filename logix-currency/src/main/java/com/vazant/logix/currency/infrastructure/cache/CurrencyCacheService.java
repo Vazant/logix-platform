@@ -7,15 +7,15 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
-@CacheConfig(cacheNames = "currencyRates")
+@CacheConfig(cacheNames = "${currency.cache-name}")
 public class CurrencyCacheService {
 
-  @Cacheable(key = "#currencyCode")
+  @Cacheable(key = "#p0")
   public CurrencyRate getRate(String currencyCode) {
     throw new IllegalStateException("❌ Rate not cached yet: " + currencyCode);
   }
 
-  @CachePut(key = "#rate.targetCurrencyCode()")
+  @CachePut(key = "#p0.targetCurrencyCode")
   public CurrencyRate saveRate(CurrencyRate rate) {
     return rate;
   }

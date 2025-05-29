@@ -41,10 +41,13 @@ public class CurrencyApplicationService {
           BigDecimal rate = new BigDecimal(entry.getValue());
           CurrencyRate currencyRate =
               new CurrencyRate(entry.getKey(), rate, properties.getBaseCurrency(), Instant.now());
+
           currencyCacheService.saveRate(currencyRate);
           saved++;
         } catch (NumberFormatException e) {
-          log.warn("❌ Невалидный курс: {} = {}", entry.getKey(), entry.getValue());
+          log.warn("❌ Невалидный курс: {} = {}", entry.getKey(), entry.getValue(), e);
+        } catch (Exception e) {
+          log.error("🚨 Ошибка при сохранении курса {}: {}", entry.getKey(), e.getMessage(), e);
         }
       }
 
@@ -55,14 +58,35 @@ public class CurrencyApplicationService {
   }
 
   public BigDecimal convert(String from, String to, BigDecimal amount) {
-    if (from.equalsIgnoreCase(to)) return amount;
+    if (from.equalsIgnoreCase(to)) {
+      return amount;
+    }
 
-    CurrencyRate fromRate = currencyCacheService.getRate(from);
-    CurrencyRate toRate = currencyCacheService.getRate(to);
+    CurrencyRate fromRate = null;
+    CurrencyRate toRate = null;
 
-    return amount
-        .multiply(toRate.getRate())
-        .divide(fromRate.getRate(), properties.getScale(), properties.getRoundingMode());
+    try {
+      fromRate = currencyCacheService.getRate(from);
+    } catch (Exception e) {
+      log.error("❌ Не удалось получить курс валюты '{}': {}", from, e.getMessage(), e);
+      throw new IllegalStateException("Отсутствует курс валюты: " + from, e);
+    }
+
+    try {
+      toRate = currencyCacheService.getRate(to);
+    } catch (Exception e) {
+      log.error("❌ Не удалось получить курс валюты '{}': {}", to, e.getMessage(), e);
+      throw new IllegalStateException("Отсутствует курс валюты: " + to, e);
+    }
+
+    try {
+      return amount
+          .multiply(toRate.getRate())
+          .divide(fromRate.getRate(), properties.getScale(), properties.getRoundingMode());
+    } catch (ArithmeticException e) {
+      log.error("🚨 Ошибка при пересчете валюты {} -> {}: {}", from, to, e.getMessage(), e);
+      throw new IllegalStateException("Ошибка при пересчете валют", e);
+    }
   }
 
   public void validateStartupRates(List<String> requiredCurrencyCodes) {
@@ -70,7 +94,7 @@ public class CurrencyApplicationService {
       try {
         currencyCacheService.getRate(code);
       } catch (Exception e) {
-        log.warn("⚠️ Missing exchange rate for currency: {}", code);
+        log.warn("⚠️ Не найден курс для обязательной валюты '{}': {}", code, e.getMessage());
       }
     }
   }

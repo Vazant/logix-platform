@@ -16,6 +16,7 @@ public class CurrencyProperties {
   private String baseCurrency;
   private int scale;
   private RoundingMode roundingMode;
+  private String cacheName;
 
   private RetryProperties retry;
   private RedisTtlProperties redis;

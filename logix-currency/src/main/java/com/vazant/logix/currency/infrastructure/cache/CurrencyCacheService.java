@@ -1,22 +1,33 @@
 package com.vazant.logix.currency.infrastructure.cache;
 
 import com.vazant.logix.currency.domain.model.CurrencyRate;
-import org.springframework.cache.annotation.CacheConfig;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
+import com.vazant.logix.currency.infrastructure.config.CurrencyProperties;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
 @Service
-@CacheConfig(cacheNames = "${currency.cache-name}")
 public class CurrencyCacheService {
 
-  @Cacheable(key = "#p0")
-  public CurrencyRate getRate(String currencyCode) {
-    throw new IllegalStateException("❌ Rate not cached yet: " + currencyCode);
+  private final CacheManager cacheManager;
+  private final String cacheName;
+
+  public CurrencyCacheService(CurrencyProperties properties, CacheManager cacheManager) {
+    this.cacheManager = cacheManager;
+    this.cacheName = properties.getCacheName();
   }
 
-  @CachePut(key = "#p0.targetCurrencyCode")
+  public CurrencyRate getRate(String currencyCode) {
+    var cache = cacheManager.getCache(cacheName);
+    if (cache == null) throw new IllegalStateException("❌ Cache not found: " + cacheName);
+    CurrencyRate rate = cache.get(currencyCode, CurrencyRate.class);
+    if (rate == null) throw new IllegalStateException("❌ Rate not cached yet: " + currencyCode);
+    return rate;
+  }
+
   public CurrencyRate saveRate(CurrencyRate rate) {
+    var cache = cacheManager.getCache(cacheName);
+    if (cache == null) throw new IllegalStateException("❌ Cache not found: " + cacheName);
+    cache.put(rate.getTargetCurrencyCode(), rate);
     return rate;
   }
 }

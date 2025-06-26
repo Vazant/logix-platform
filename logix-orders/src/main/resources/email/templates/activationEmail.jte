@@ -61,13 +61,15 @@
 
     <p><strong>Temporary Password:</strong> @{variables.tempPassword()}</p>
 
-    <p>To activate your account, please follow this link:</p>
+    <p>To activate your account and set a new password, please follow this link:</p>
 
     <p>
         <a class="button" href="@{variables.activationLink()}">Activate Account</a>
     </p>
 
-    <p>If you didn’t request this email, you can ignore it.</p>
+    <p>This link will expire in 24 hours for security reasons.</p>
+
+    <p>If you didn't request this email, you can ignore it.</p>
 
     <div class="footer">
         This message was sent automatically. Please do not reply.

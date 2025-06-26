@@ -4,6 +4,7 @@ import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.PortBinding;
 import com.github.dockerjava.api.model.Ports;
 import com.vazant.logix.devtools.config.DevContainerProperties;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,14 +14,17 @@ import org.testcontainers.utility.DockerImageName;
 
 @Configuration
 @Profile("dev")
-public class PostgresDev {
+public class PostgresDev implements DisposableBean {
+
+  private PostgreSQLContainer<?> container;
 
   @Bean
   @ServiceConnection
+  @SuppressWarnings("resource")
   public PostgreSQLContainer<?> postgresContainer(DevContainerProperties props) {
-    var container = new PostgreSQLContainer<>(DockerImageName.parse("postgres:16.2-alpine"));
-    container =
-        container
+    var postgresContainer = new PostgreSQLContainer<>(DockerImageName.parse("postgres:16.2-alpine"));
+    this.container =
+        postgresContainer
             .withDatabaseName(props.dbname())
             .withUsername(props.username())
             .withPassword(props.password())
@@ -39,5 +43,12 @@ public class PostgresDev {
                 });
     container.start();
     return container;
+  }
+
+  @Override
+  public void destroy() throws Exception {
+    if (container != null) {
+      container.stop();
+    }
   }
 }

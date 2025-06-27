@@ -1,7 +1,8 @@
 package com.vazant.logix.orders.presentation.controller.customer;
 
-import com.vazant.logix.orders.application.service.customer.CustomerService;
+import com.vazant.logix.orders.application.service.common.CrudService;
 import com.vazant.logix.orders.domain.customer.Customer;
+import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,9 +11,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/customers")
 public class CustomerController {
 
-  private final CustomerService customerService;
+  private final CrudService<Customer> customerService;
 
-  public CustomerController(CustomerService customerService) {
+  public CustomerController(CrudService<Customer> customerService) {
     this.customerService = customerService;
   }
 
@@ -29,14 +30,14 @@ public class CustomerController {
   }
 
   @PostMapping
-  public ResponseEntity<Customer> createCustomer(@RequestBody Customer customer) {
+  public ResponseEntity<Customer> createCustomer(@Valid @RequestBody Customer customer) {
     Customer created = customerService.create(customer);
     return ResponseEntity.ok(created);
   }
 
   @PutMapping("/{customerUuid}")
   public ResponseEntity<Customer> updateCustomer(
-      @PathVariable String customerUuid, @RequestBody Customer customer) {
+      @PathVariable String customerUuid, @Valid @RequestBody Customer customer) {
     Customer updated = customerService.update(customerUuid, customer);
     return ResponseEntity.ok(updated);
   }
@@ -45,5 +46,17 @@ public class CustomerController {
   public ResponseEntity<Void> deleteCustomer(@PathVariable String customerUuid) {
     customerService.delete(customerUuid);
     return ResponseEntity.noContent().build();
+  }
+
+  @GetMapping("/{customerUuid}/exists")
+  public ResponseEntity<Boolean> customerExists(@PathVariable String customerUuid) {
+    boolean exists = customerService.exists(customerUuid);
+    return ResponseEntity.ok(exists);
+  }
+
+  @GetMapping("/count")
+  public ResponseEntity<Long> getCustomerCount() {
+    long count = customerService.count();
+    return ResponseEntity.ok(count);
   }
 }

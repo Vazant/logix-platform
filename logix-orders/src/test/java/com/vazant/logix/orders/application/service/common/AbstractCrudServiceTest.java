@@ -14,19 +14,20 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class GenericCrudServiceTest {
+class AbstractCrudServiceTest {
 
   @Mock
   private CustomerRepository customerRepository;
 
-  private GenericCrudService<Customer> customerService;
+  private AbstractCrudService<Customer> customerService;
 
   @BeforeEach
   void setUp() {
-    customerService = new GenericCrudService<>(customerRepository, Customer.class);
+    customerService = new TestCustomerService(customerRepository);
   }
 
   @Test
@@ -52,7 +53,23 @@ class GenericCrudServiceTest {
     // When & Then
     assertThatThrownBy(() -> customerService.findByUuid(uuid.toString()))
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("Customer not found");
+        .hasMessageContaining("Customer not found with UUID");
+  }
+
+  @Test
+  void shouldValidateUuidInput() {
+    // When & Then
+    assertThatThrownBy(() -> customerService.findByUuid(null))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("UUID string must not be null or empty");
+        
+    assertThatThrownBy(() -> customerService.findByUuid(""))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("UUID string must not be null or empty");
+        
+    assertThatThrownBy(() -> customerService.findByUuid("   "))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("UUID string must not be null or empty");
   }
 
   @Test
@@ -84,6 +101,15 @@ class GenericCrudServiceTest {
 
     // Then
     assertThat(result).isEqualTo(savedCustomer);
+    verify(customerRepository).save(customer);
+  }
+
+  @Test
+  void shouldValidateCreateInput() {
+    // When & Then
+    assertThatThrownBy(() -> customerService.create(null))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Entity to create must not be null");
   }
 
   @Test
@@ -101,14 +127,23 @@ class GenericCrudServiceTest {
 
     // Then
     assertThat(result).isEqualTo(updatedCustomer);
+    verify(customerRepository).save(existingCustomer);
   }
 
   @Test
-  void shouldThrowExceptionWhenUpdateWithNullEntity() {
+  void shouldValidateUpdateInput() {
     // When & Then
+    assertThatThrownBy(() -> customerService.update(null, createTestCustomer("John", "Doe", "john@example.com")))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("UUID string must not be null or empty");
+        
+    assertThatThrownBy(() -> customerService.update("", createTestCustomer("John", "Doe", "john@example.com")))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("UUID string must not be null or empty");
+        
     assertThatThrownBy(() -> customerService.update(UUID.randomUUID().toString(), null))
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("Customer to update must not be null");
+        .hasMessage("Entity to update must not be null");
   }
 
   @Test
@@ -117,9 +152,11 @@ class GenericCrudServiceTest {
     UUID uuid = UUID.randomUUID();
     when(customerRepository.existsById(uuid)).thenReturn(true);
 
-    // When & Then
+    // When
     customerService.delete(uuid.toString());
-    // No exception should be thrown
+
+    // Then
+    verify(customerRepository).deleteById(uuid);
   }
 
   @Test
@@ -131,7 +168,19 @@ class GenericCrudServiceTest {
     // When & Then
     assertThatThrownBy(() -> customerService.delete(uuid.toString()))
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("Customer not found");
+        .hasMessageContaining("Customer not found with UUID");
+  }
+
+  @Test
+  void shouldValidateDeleteInput() {
+    // When & Then
+    assertThatThrownBy(() -> customerService.delete(null))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("UUID string must not be null or empty");
+        
+    assertThatThrownBy(() -> customerService.delete(""))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("UUID string must not be null or empty");
   }
 
   @Test
@@ -148,6 +197,18 @@ class GenericCrudServiceTest {
   }
 
   @Test
+  void shouldValidateExistsInput() {
+    // When & Then
+    assertThatThrownBy(() -> customerService.exists(null))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("UUID string must not be null or empty");
+        
+    assertThatThrownBy(() -> customerService.exists(""))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("UUID string must not be null or empty");
+  }
+
+  @Test
   void shouldCount() {
     // Given
     when(customerRepository.count()).thenReturn(5L);
@@ -161,5 +222,18 @@ class GenericCrudServiceTest {
 
   private Customer createTestCustomer(String firstName, String lastName, String email) {
     return new Customer(firstName, lastName, email, "", "", "", "", "", "");
+  }
+
+  // Test implementation of AbstractCrudService
+  private static class TestCustomerService extends AbstractCrudService<Customer> {
+    
+    public TestCustomerService(CustomerRepository repository) {
+      super(repository, Customer.class);
+    }
+    
+    @Override
+    protected String getEntityName() {
+      return "Customer";
+    }
   }
 } 

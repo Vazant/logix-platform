@@ -7,6 +7,7 @@ import com.vazant.logix.orders.domain.product.Product;
 import com.vazant.logix.orders.domain.product.ProductBuilder;
 import com.vazant.logix.orders.domain.product.ProductPrice;
 import com.vazant.logix.orders.domain.product.ProductPriceBuilder;
+import com.vazant.logix.orders.domain.product.DimensionsBuilder;
 import com.vazant.logix.orders.domain.shared.Currency;
 import com.vazant.logix.orders.domain.shared.Money;
 import com.vazant.logix.orders.domain.shared.MoneyBuilder;
@@ -63,16 +64,22 @@ class ProductPriceControllerTest {
                 .phoneNumber("+1234567890")
                 .build();
         
-        ProductBuilder productBuilder = ProductBuilder.product()
+        testProduct = ProductBuilder.product()
                 .name("Test Product")
                 .prices(new ArrayList<>())
                 .description("Test product description")
                 .skuCode("TEST-SKU-001")
+                .dimensions(DimensionsBuilder.dimensions()
+                        .width(BigDecimal.valueOf(10.0))
+                        .height(BigDecimal.valueOf(5.0))
+                        .length(BigDecimal.valueOf(2.0))
+                        .weight(BigDecimal.valueOf(0.5))
+                        .build())
+                .stockQuantity(100)
                 .categoryId(UUID.randomUUID())
                 .imageId(UUID.randomUUID())
-                .organization(testOrganization);
-        
-        testProduct = productBuilder.build();
+                .organization(testOrganization)
+                .build();
         
         testProductPrice = ProductPriceBuilder.productPrice()
                 .product(testProduct)

@@ -6,6 +6,11 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import java.math.BigDecimal;
 
+/**
+ * Value object representing the physical dimensions and weight of a product.
+ * <p>
+ * Immutable and embeddable in JPA entities.
+ */
 @Embeddable
 public class Dimensions {
 
@@ -25,6 +30,9 @@ public class Dimensions {
   @PositiveOrZero(message = "Weight must be positive or zero")
   private final BigDecimal weight;
 
+  /**
+   * Default constructor for JPA, initializes all fields to zero.
+   */
   protected Dimensions() {
     this.width = BigDecimal.ZERO;
     this.height = BigDecimal.ZERO;
@@ -32,6 +40,14 @@ public class Dimensions {
     this.weight = BigDecimal.ZERO;
   }
 
+  /**
+   * Constructs a new Dimensions object with the specified values.
+   *
+   * @param width the width
+   * @param height the height
+   * @param length the length
+   * @param weight the weight
+   */
   @JiltBuilder
   public Dimensions(BigDecimal width, BigDecimal height, BigDecimal length, BigDecimal weight) {
     this.width = width;
@@ -40,18 +56,38 @@ public class Dimensions {
     this.weight = weight;
   }
 
+  /**
+   * Returns the width.
+   *
+   * @return the width
+   */
   public BigDecimal getWidth() {
     return width;
   }
 
+  /**
+   * Returns the height.
+   *
+   * @return the height
+   */
   public BigDecimal getHeight() {
     return height;
   }
 
+  /**
+   * Returns the length.
+   *
+   * @return the length
+   */
   public BigDecimal getLength() {
     return length;
   }
 
+  /**
+   * Returns the weight.
+   *
+   * @return the weight
+   */
   public BigDecimal getWeight() {
     return weight;
   }

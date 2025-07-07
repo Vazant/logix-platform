@@ -3,11 +3,11 @@ server:
 
 spring:
   mail:
-    host: localhost
-    port: 3025
+    host: ${ORDERS_MAIL_HOST:localhost}
+    port: ${ORDERS_MAIL_PORT:3025}
     protocol: smtp
-    username: dummy
-    password: dummy
+    username: ${ORDERS_MAIL_USER:dummy}
+    password: ${ORDERS_MAIL_PASS:dummy}
     properties:
       mail:
         smtp:
@@ -15,10 +15,9 @@ spring:
           starttls:
             enable: false
   datasource:
-    url: jdbc:postgresql://localhost:5433/orders_db
-    username: postgres
-    password: postgres
-
+    url: ${ORDERS_DB_URL:jdbc:postgresql://localhost:5433/orders_db}
+    username: ${ORDERS_DB_USER:postgres}
+    password: ${ORDERS_DB_PASS:postgres}
   jpa:
     hibernate:
       ddl-auto: update
@@ -26,22 +25,31 @@ spring:
     properties:
       hibernate:
         format_sql: false
-
   kafka:
-    bootstrap-servers: localhost:29092
-
+    bootstrap-servers: ${ORDERS_KAFKA_BOOTSTRAP:localhost:29092}
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.xml
 
-app:
+orders:
   data-generator:
     enabled: true
+  retry:
+    max-attempts: 3
+    initial-delay: 1000
+    multiplier: 2.0
+    max-delay: 5000
+  cache:
+    ttl-hours: 24
+    ttl-currency-rates-hours: 12
+  rest:
+    connectTimeout: 5
+    readTimeout: 5
 
 test-container:
-  host: localhost
-  dbname: orders_db
-  username: postgres
-  password: postgres
-  db-port: 5433
+  host: ${ORDERS_TESTCONTAINER_HOST:localhost}
+  dbname: ${ORDERS_TESTCONTAINER_DB:orders_db}
+  username: ${ORDERS_TESTCONTAINER_USER:postgres}
+  password: ${ORDERS_TESTCONTAINER_PASS:postgres}
+  db-port: ${ORDERS_TESTCONTAINER_PORT:5433}
 

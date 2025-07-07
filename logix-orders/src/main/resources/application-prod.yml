@@ -3,9 +3,9 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://postgres:5432/orders_db
-    username: postgres
-    password: postgres
+    url: ${ORDERS_DB_URL:jdbc:postgresql://postgres:5432/orders_db}
+    username: ${ORDERS_DB_USER:postgres}
+    password: ${ORDERS_DB_PASS:postgres}
 
   jpa:
     hibernate:
@@ -13,12 +13,23 @@ spring:
     show-sql: false
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${ORDERS_KAFKA_BOOTSTRAP:localhost:9092}
 
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.xml
 
-app:
+orders:
   data-generator:
     enabled: false
+  retry:
+    max-attempts: 3
+    initial-delay: 1000
+    multiplier: 2.0
+    max-delay: 5000
+  cache:
+    ttl-hours: 24
+    ttl-currency-rates-hours: 12
+  rest:
+    connectTimeout: 5
+    readTimeout: 5

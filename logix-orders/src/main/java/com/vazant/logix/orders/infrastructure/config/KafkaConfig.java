@@ -15,9 +15,35 @@ import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
 import org.springframework.kafka.requestreply.ReplyingKafkaTemplate;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.support.serializer.JsonSerializer;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import com.vazant.logix.orders.infrastructure.config.KafkaProperties;
+import java.util.HashMap;
 
 @Configuration
+@EnableConfigurationProperties(KafkaProperties.class)
 public class KafkaConfig {
+
+  private final KafkaProperties kafkaProperties;
+
+  public KafkaConfig(KafkaProperties kafkaProperties) {
+    this.kafkaProperties = kafkaProperties;
+  }
+
+  @Bean
+  public Map<String, Object> kafkaConsumerConfigs() {
+    Map<String, Object> props = new HashMap<>();
+    props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers());
+    // ... остальные параметры ...
+    return props;
+  }
+
+  @Bean
+  public Map<String, Object> kafkaProducerConfigs() {
+    Map<String, Object> props = new HashMap<>();
+    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapServers());
+    // ... остальные параметры ...
+    return props;
+  }
 
   @Bean
   public ProducerFactory<String, CurrencyConversionRequest> producerFactory() {

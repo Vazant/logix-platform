@@ -110,6 +110,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <artifactId>h2</artifactId>
+      <groupId>com.h2database</groupId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <artifactId>logix-kafka-shared</artifactId>
       <groupId>com.vazant.logix</groupId>
       <scope>compile</scope>
@@ -131,4 +136,30 @@
     <jilt.version>1.7</jilt.version>
     <jte.version>3.2.0</jte.version>
   </properties>
+  
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.11.0</version>
+        <configuration>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+              <version>1.18.30</version>
+            </path>
+            <path>
+              <groupId>cc.jilt</groupId>
+              <artifactId>jilt</artifactId>
+              <version>${jilt.version}</version>
+            </path>
+          </annotationProcessorPaths>
+          <compilerArgs>
+            <arg>-Amapstruct.defaultComponentModel=spring</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

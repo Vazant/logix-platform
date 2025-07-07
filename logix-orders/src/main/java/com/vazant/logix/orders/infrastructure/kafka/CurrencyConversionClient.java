@@ -6,19 +6,30 @@ import com.vazant.logix.shared.kafka.dto.CurrencyConversionResponse;
 import java.math.BigDecimal;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.springframework.kafka.requestreply.ReplyingKafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.stereotype.Component;
 
+/**
+ * Kafka client for sending currency conversion requests and receiving responses using ReplyingKafkaTemplate.
+ * Used for integration with the currency microservice via Kafka.
+ */
 @Component
-@RequiredArgsConstructor
 public class CurrencyConversionClient {
 
   private final ReplyingKafkaTemplate<String, CurrencyConversionRequest, CurrencyConversionResponse>
       replyingKafkaTemplate;
+
+  /**
+   * Constructs a new CurrencyConversionClient.
+   *
+   * @param replyingKafkaTemplate the Kafka template for sending and receiving messages
+   */
+  public CurrencyConversionClient(ReplyingKafkaTemplate<String, CurrencyConversionRequest, CurrencyConversionResponse> replyingKafkaTemplate) {
+    this.replyingKafkaTemplate = replyingKafkaTemplate;
+  }
 
   public BigDecimal convert(String from, String to, BigDecimal amount) {
     String correlationId = UUID.randomUUID().toString();

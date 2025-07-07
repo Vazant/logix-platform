@@ -1,8 +1,24 @@
 package com.vazant.logix.shared.kafka.config;
 
-public class KafkaTopics {
-  public static final String CURRENCY_REQUESTS = "currency.requests";
-  public static final String CURRENCY_REPLIES = "currency.replies";
+import com.vazant.logix.shared.Constants;
 
+/**
+ * Shared Kafka topic names for currency-related messaging.
+ * <p>
+ * Provides topic names for requests and replies, referencing shared constants.
+ */
+public class KafkaTopics {
+  /**
+   * Kafka topic for currency conversion requests.
+   */
+  public static final String CURRENCY_REQUESTS = Constants.CURRENCY_REQUESTS;
+  /**
+   * Kafka topic for currency conversion replies.
+   */
+  public static final String CURRENCY_REPLIES = Constants.CURRENCY_REPLIES;
+
+  /**
+   * Default constructor.
+   */
   public KafkaTopics() {}
 }

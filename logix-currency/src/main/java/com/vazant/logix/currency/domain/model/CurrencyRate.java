@@ -7,7 +7,11 @@ import java.time.Instant;
 import java.util.Objects;
 import lombok.Getter;
 
-/** Value Object, representing exchange rate from base → target currency. */
+/**
+ * Value Object representing an exchange rate from a base currency to a target currency.
+ * <p>
+ * Immutable and used for currency conversion operations.
+ */
 @Getter
 public class CurrencyRate {
 
@@ -16,6 +20,15 @@ public class CurrencyRate {
   private final String baseCurrencyCode;
   private final Instant updatedAt;
 
+  /**
+   * Constructs a new CurrencyRate.
+   *
+   * @param targetCurrencyCode the target currency code (e.g., "USD")
+   * @param rate the exchange rate (must be positive)
+   * @param baseCurrencyCode the base currency code (e.g., "EUR")
+   * @param updatedAt the timestamp when the rate was last updated
+   * @throws IllegalArgumentException if rate is null or not positive
+   */
   @JsonCreator
   public CurrencyRate(
       @JsonProperty("targetCurrencyCode") String targetCurrencyCode,
@@ -49,4 +62,18 @@ public class CurrencyRate {
   public String toString() {
     return targetCurrencyCode + "=" + rate;
   }
+
+  /**
+   * Returns the exchange rate value.
+   *
+   * @return the exchange rate
+   */
+  public BigDecimal getRate() { return rate; }
+
+  /**
+   * Returns the target currency code.
+   *
+   * @return the target currency code
+   */
+  public String getTargetCurrencyCode() { return targetCurrencyCode; }
 }

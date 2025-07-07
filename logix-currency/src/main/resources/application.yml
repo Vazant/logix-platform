@@ -22,6 +22,7 @@ currency:
   kafka:
     request-topic: currency.requests
     reply-topic-prefix: currency.replies.
+    group-id: currency-group
 
 spring:
   cache:

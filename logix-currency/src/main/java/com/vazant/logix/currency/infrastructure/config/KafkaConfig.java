@@ -15,14 +15,38 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.core.*;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.support.serializer.JsonSerializer;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import com.vazant.logix.currency.infrastructure.config.CurrencyProperties;
 
+/**
+ * Kafka configuration for currency service messaging.
+ * <p>
+ * Configures producer and consumer factories, templates, and deserializers for currency conversion messages.
+ */
 @EnableKafka
 @Configuration
+@EnableConfigurationProperties(CurrencyProperties.class)
 public class KafkaConfig {
 
   @Value("${spring.kafka.bootstrap-servers}")
   private String bootstrapServers;
 
+  private final CurrencyProperties properties;
+
+  /**
+   * Constructs a new KafkaConfig with the given currency properties.
+   *
+   * @param properties the currency configuration properties
+   */
+  public KafkaConfig(CurrencyProperties properties) {
+    this.properties = properties;
+  }
+
+  /**
+   * Producer factory for currency conversion response messages.
+   *
+   * @return the producer factory
+   */
   @Bean
   public ProducerFactory<String, CurrencyConversionResponse> responseProducerFactory() {
     Map<String, Object> config = new HashMap<>();
@@ -46,7 +70,7 @@ public class KafkaConfig {
 
     Map<String, Object> config = new HashMap<>();
     config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-    config.put(ConsumerConfig.GROUP_ID_CONFIG, "currency-service");
+    config.put(ConsumerConfig.GROUP_ID_CONFIG, properties.getKafka().getGroupId());
     config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
 

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.vazant.logix.currency.domain.model.CurrencyRate;
 import java.time.Duration;
-import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -19,14 +18,32 @@ import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+/**
+ * Redis configuration for currency service caching.
+ * <p>
+ * Configures cache manager, serializers, and Redis template for storing currency rates.
+ */
 @Configuration
 @EnableCaching
 @EnableConfigurationProperties(CurrencyProperties.class)
-@RequiredArgsConstructor
 public class RedisConfig {
 
   private final CurrencyProperties properties;
 
+  /**
+   * Constructs a new RedisConfig with the given currency properties.
+   *
+   * @param properties the currency configuration properties
+   */
+  public RedisConfig(CurrencyProperties properties) {
+    this.properties = properties;
+  }
+
+  /**
+   * Generic JSON serializer for Redis values.
+   *
+   * @return the generic Jackson2 JSON Redis serializer
+   */
   @Bean
   public GenericJackson2JsonRedisSerializer genericRedisSerializer() {
     ObjectMapper mapper =
@@ -36,6 +53,11 @@ public class RedisConfig {
     return new GenericJackson2JsonRedisSerializer(mapper);
   }
 
+  /**
+   * Jackson2 JSON serializer for CurrencyRate objects.
+   *
+   * @return the Jackson2 JSON Redis serializer for CurrencyRate
+   */
   @Bean
   public Jackson2JsonRedisSerializer<CurrencyRate> currencyRateSerializer() {
     ObjectMapper mapper =
@@ -46,6 +68,14 @@ public class RedisConfig {
     return new Jackson2JsonRedisSerializer<>(mapper, CurrencyRate.class);
   }
 
+  /**
+   * Configures the Redis cache manager with custom cache settings.
+   *
+   * @param factory the Redis connection factory
+   * @param genericSerializer the generic JSON serializer
+   * @param rateSerializer the serializer for CurrencyRate objects
+   * @return the Redis cache manager
+   */
   @Bean
   public RedisCacheManager cacheManager(
       RedisConnectionFactory factory,
@@ -72,6 +102,13 @@ public class RedisConfig {
         .build();
   }
 
+  /**
+   * Configures the Redis template for general-purpose Redis operations.
+   *
+   * @param factory the Redis connection factory
+   * @param genericSerializer the generic JSON serializer
+   * @return the Redis template
+   */
   @Bean
   public RedisTemplate<String, Object> redisTemplate(
       RedisConnectionFactory factory, GenericJackson2JsonRedisSerializer genericSerializer) {

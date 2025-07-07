@@ -2,100 +2,95 @@ package com.vazant.logix.currency.application.service;
 
 import com.vazant.logix.currency.domain.model.CurrencyRate;
 import com.vazant.logix.currency.infrastructure.cache.CurrencyCacheService;
-import com.vazant.logix.currency.infrastructure.client.dto.CurrencyRatesResponse;
 import com.vazant.logix.currency.infrastructure.config.CurrencyProperties;
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.transaction.annotation.Transactional;
+import com.vazant.logix.currency.application.service.provider.CurrencyProviderClient;
+import com.vazant.logix.currency.application.service.validation.CurrencyValidationService;
 
+/**
+ * Service for currency-related business logic and operations.
+ * <p>
+ * Handles currency rate updates, conversion, and validation.
+ */
 @Slf4j
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class CurrencyApplicationService {
 
-  private final RestTemplate restTemplate;
-  private final CurrencyProperties properties;
+  private final CurrencyProviderClient providerClient;
+  private final CurrencyValidationService validationService;
   private final CurrencyCacheService currencyCacheService;
+  private final CurrencyProperties properties;
 
+  /**
+   * Updates currency rates from the external provider and saves them to the cache.
+   * Logs errors for any failed saves.
+   */
   public void updateRatesFromProvider() {
-    try {
-      String url =
-          String.format(
-              "%s?apikey=%s&base=%s",
-              properties.getProviderUrl(), properties.getApiKey(), properties.getBaseCurrency());
-
-      CurrencyRatesResponse response = restTemplate.getForObject(url, CurrencyRatesResponse.class);
-
-      if (response == null || response.getRates() == null) {
-        throw new IllegalStateException("❌ Пустой ответ от API валют");
+    var rates = providerClient.fetchRates();
+    int saved = 0;
+    for (var entry : rates.entrySet()) {
+      try {
+        currencyCacheService.saveRate(entry.getValue());
+        saved++;
+      } catch (Exception e) {
+        log.error("Error saving rate {}: {}", entry.getKey(), e.getMessage(), e);
       }
-
-      int saved = 0;
-      for (Map.Entry<String, String> entry : response.getRates().entrySet()) {
-        try {
-          BigDecimal rate = new BigDecimal(entry.getValue());
-          CurrencyRate currencyRate =
-              new CurrencyRate(entry.getKey(), rate, properties.getBaseCurrency(), Instant.now());
-
-          currencyCacheService.saveRate(currencyRate);
-          saved++;
-        } catch (NumberFormatException e) {
-          log.warn("❌ Невалидный курс: {} = {}", entry.getKey(), entry.getValue(), e);
-        } catch (Exception e) {
-          log.error("🚨 Ошибка при сохранении курса {}: {}", entry.getKey(), e.getMessage(), e);
-        }
-      }
-
-      log.info("✅ Курсы валют обновлены: {} штук", saved);
-    } catch (Exception ex) {
-      log.error("🚨 Ошибка при получении курсов валют — используем кэш", ex);
     }
+    log.info("Currency rates updated: {} items", saved);
   }
 
+  /**
+   * Converts an amount from one currency to another using cached rates.
+   *
+   * @param from the source currency code
+   * @param to the target currency code
+   * @param amount the amount to convert
+   * @return the converted amount
+   * @throws IllegalStateException if a required rate is missing or conversion fails
+   */
   public BigDecimal convert(String from, String to, BigDecimal amount) {
     if (from.equalsIgnoreCase(to)) {
       return amount;
     }
+    CurrencyRate fromRate = getRateOrThrow(from);
+    CurrencyRate toRate = getRateOrThrow(to);
+    return calculateConversion(amount, fromRate, toRate);
+  }
 
-    CurrencyRate fromRate = null;
-    CurrencyRate toRate = null;
+  /**
+   * Validates that required currency rates are present at startup.
+   *
+   * @param requiredCurrencyCodes the list of required currency codes
+   */
+  public void validateStartupRates(List<String> requiredCurrencyCodes) {
+    validationService.validateStartupRates(requiredCurrencyCodes);
+  }
 
+  // Private helper methods are not documented for API consumers
+  private CurrencyRate getRateOrThrow(String code) {
     try {
-      fromRate = currencyCacheService.getRate(from);
+      return currencyCacheService.getRate(code);
     } catch (Exception e) {
-      log.error("❌ Не удалось получить курс валюты '{}': {}", from, e.getMessage(), e);
-      throw new IllegalStateException("Отсутствует курс валюты: " + from, e);
+      log.error("Failed to get currency rate '{}': {}", code, e.getMessage(), e);
+      throw new IllegalStateException("Currency rate not found: " + code, e);
     }
+  }
 
-    try {
-      toRate = currencyCacheService.getRate(to);
-    } catch (Exception e) {
-      log.error("❌ Не удалось получить курс валюты '{}': {}", to, e.getMessage(), e);
-      throw new IllegalStateException("Отсутствует курс валюты: " + to, e);
-    }
-
+  private BigDecimal calculateConversion(BigDecimal amount, CurrencyRate fromRate, CurrencyRate toRate) {
     try {
       return amount
           .multiply(toRate.getRate())
           .divide(fromRate.getRate(), properties.getScale(), properties.getRoundingMode());
     } catch (ArithmeticException e) {
-      log.error("🚨 Ошибка при пересчете валюты {} -> {}: {}", from, to, e.getMessage(), e);
-      throw new IllegalStateException("Ошибка при пересчете валют", e);
-    }
-  }
-
-  public void validateStartupRates(List<String> requiredCurrencyCodes) {
-    for (String code : requiredCurrencyCodes) {
-      try {
-        currencyCacheService.getRate(code);
-      } catch (Exception e) {
-        log.warn("⚠️ Не найден курс для обязательной валюты '{}': {}", code, e.getMessage());
-      }
+      log.error("Error converting currency {} -> {}: {}", fromRate.getTargetCurrencyCode(), toRate.getTargetCurrencyCode(), e.getMessage(), e);
+      throw new IllegalStateException("Currency conversion error", e);
     }
   }
 }

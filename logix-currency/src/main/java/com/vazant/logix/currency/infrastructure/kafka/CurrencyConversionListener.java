@@ -8,21 +8,52 @@ import java.math.BigDecimal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 
-@Slf4j
+/**
+ * Kafka listener for handling currency conversion requests.
+ * <p>
+ * Listens for conversion requests, performs conversion, and sends replies to the appropriate topic.
+ */
 @Component
-@RequiredArgsConstructor
 public class CurrencyConversionListener {
+
+  private static final Logger log = LoggerFactory.getLogger(CurrencyConversionListener.class);
 
   private final CurrencyApplicationService service;
   private final KafkaTemplate<String, CurrencyConversionResponse> kafkaTemplate;
   private final CurrencyProperties properties;
 
+  /**
+   * Constructs a new CurrencyConversionListener.
+   *
+   * @param service the currency application service
+   * @param kafkaTemplate the Kafka template for sending responses
+   * @param properties the currency properties
+   */
+  public CurrencyConversionListener(
+      CurrencyApplicationService service,
+      KafkaTemplate<String, CurrencyConversionResponse> kafkaTemplate,
+      CurrencyProperties properties) {
+    this.service = service;
+    this.kafkaTemplate = kafkaTemplate;
+    this.properties = properties;
+  }
+
+  /**
+   * Handles incoming currency conversion requests from Kafka, performs the conversion,
+   * and sends the response to the reply topic with the correlation ID.
+   *
+   * @param request the currency conversion request
+   * @param replyTopicHeader the reply topic header (may be null)
+   * @param correlationIdBytes the correlation ID as a byte array
+   */
   @KafkaListener(topics = "${currency.kafka.request-topic}", groupId = "currency-service")
   public void handleConversionRequest(
       CurrencyConversionRequest request,

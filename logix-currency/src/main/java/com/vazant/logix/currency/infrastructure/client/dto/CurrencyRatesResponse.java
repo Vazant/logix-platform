@@ -17,4 +17,6 @@ public class CurrencyRatesResponse {
 
   @JsonProperty("rates")
   private Map<String, String> rates;
+
+  public Map<String, String> getRates() { return rates; }
 }

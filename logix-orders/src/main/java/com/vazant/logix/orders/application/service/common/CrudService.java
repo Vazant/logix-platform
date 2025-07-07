@@ -6,7 +6,9 @@ import java.util.List;
 
 /**
  * Interface defining basic CRUD operations for entities.
- * This interface can be implemented by any service that needs CRUD functionality.
+ * <p>
+ * This interface can be implemented by any service that needs CRUD functionality for entities
+ * extending BaseEntity and implementing Updatable.
  *
  * @param <T> the entity type
  */

@@ -3,21 +3,31 @@ package com.vazant.logix.orders.application.service.product;
 import com.vazant.logix.orders.application.service.common.AbstractCrudService;
 import com.vazant.logix.orders.domain.product.Category;
 import com.vazant.logix.orders.infrastructure.repository.product.CategoryRepository;
-import java.util.UUID;
-import org.springframework.data.jpa.repository.JpaRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Service for managing product categories.
+ * <p>
+ * Provides CRUD operations and business logic for product categories.
+ */
+@Slf4j
 @Service
+@Transactional
 public class CategoryService extends AbstractCrudService<Category> {
-  private final CategoryRepository categoryRepository;
 
   public CategoryService(CategoryRepository categoryRepository) {
-    super(Category.class);
-    this.categoryRepository = categoryRepository;
+    super(categoryRepository, Category.class);
   }
 
+  /**
+   * Returns the entity name for logging and error messages.
+   *
+   * @return the entity name
+   */
   @Override
-  protected JpaRepository<Category, UUID> getRepository() {
-    return categoryRepository;
+  protected String getEntityName() {
+    return "Category";
   }
 }

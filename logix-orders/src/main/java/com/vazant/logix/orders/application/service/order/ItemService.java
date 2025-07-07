@@ -3,21 +3,24 @@ package com.vazant.logix.orders.application.service.order;
 import com.vazant.logix.orders.application.service.common.AbstractCrudService;
 import com.vazant.logix.orders.domain.order.Item;
 import com.vazant.logix.orders.infrastructure.repository.order.ItemRepository;
-import java.util.UUID;
-import org.springframework.data.jpa.repository.JpaRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Service for managing order items.
+ */
+@Slf4j
 @Service
+@Transactional
 public class ItemService extends AbstractCrudService<Item> {
-  private final ItemRepository itemRepository;
 
   public ItemService(ItemRepository itemRepository) {
-    super(Item.class);
-    this.itemRepository = itemRepository;
+    super(itemRepository, Item.class);
   }
 
   @Override
-  protected JpaRepository<Item, UUID> getRepository() {
-    return itemRepository;
+  protected String getEntityName() {
+    return "Item";
   }
 }

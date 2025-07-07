@@ -2,22 +2,27 @@ package com.vazant.logix.orders.application.service.customer;
 
 import com.vazant.logix.orders.application.service.common.CrudService;
 import com.vazant.logix.orders.domain.customer.Customer;
+import com.vazant.logix.orders.infrastructure.repository.customer.CustomerRepository;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 
 /**
- * Customer service with business-specific logic.
- * Uses composition with CrudService instead of inheritance to avoid code duplication.
+ * Service for working with customers (Customer).
+ * Contains business logic and delegates basic CRUD operations to CrudService.
  */
 @Slf4j
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class CustomerService {
 
   private final CrudService<Customer> crudService;
+  private final CustomerRepository customerRepository;
 
   /**
    * Find customer by email (business-specific method).
@@ -26,9 +31,8 @@ public class CustomerService {
    * @return optional customer
    */
   public Optional<Customer> findByEmail(String email) {
-    return crudService.findAll().stream()
-        .filter(customer -> email.equals(customer.getEmail()))
-        .findFirst();
+    Assert.hasText(email, "Email must not be null or empty");
+    return customerRepository.findByEmail(email);
   }
 
   /**
@@ -38,9 +42,8 @@ public class CustomerService {
    * @return list of customers in the city
    */
   public List<Customer> findByCity(String city) {
-    return crudService.findAll().stream()
-        .filter(customer -> city.equals(customer.getCity()))
-        .toList();
+    Assert.hasText(city, "City must not be null or empty");
+    return customerRepository.findByCity(city);
   }
 
   /**

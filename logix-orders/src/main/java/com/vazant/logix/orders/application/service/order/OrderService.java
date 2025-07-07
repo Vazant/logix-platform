@@ -1,85 +1,28 @@
 package com.vazant.logix.orders.application.service.order;
 
 import com.vazant.logix.orders.application.service.common.AbstractCrudService;
-import com.vazant.logix.orders.application.service.customer.CustomerService;
-import com.vazant.logix.orders.application.service.product.ProductService;
 import com.vazant.logix.orders.domain.order.Order;
-import com.vazant.logix.orders.domain.order.OrderBuilder;
-import com.vazant.logix.orders.domain.product.Product;
-import com.vazant.logix.orders.dto.order.OrderRequest;
-import com.vazant.logix.orders.infrastructure.kafka.CurrencyConversionClient;
 import com.vazant.logix.orders.infrastructure.repository.order.OrderRepository;
-import jakarta.transaction.Transactional;
-import java.math.BigDecimal;
-import java.util.UUID;
-import org.springframework.data.jpa.repository.JpaRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
+import com.vazant.logix.shared.Constants;
 
+/**
+ * Service for managing orders.
+ * Provides only CRUD operations. Business logic is handled by OrderBusinessService.
+ */
+@Slf4j
 @Service
+@Transactional
 public class OrderService extends AbstractCrudService<Order> {
-  private final OrderRepository repository;
-  private final CustomerService customerService;
-  private final ProductService productService;
-  private final CurrencyConversionClient currencyClient;
 
-  public OrderService(
-      OrderRepository repository,
-      CustomerService customerService,
-      ProductService productService,
-      CurrencyConversionClient currencyClient) {
-    super(Order.class);
-    this.repository = repository;
-    this.customerService = customerService;
-    this.productService = productService;
-    this.currencyClient = currencyClient;
+  public OrderService(OrderRepository orderRepository) {
+    super(orderRepository, Order.class);
   }
 
   @Override
-  protected JpaRepository<Order, UUID> getRepository() {
-    return repository;
-  }
-
-  @Transactional
-  public Order create(OrderRequest request) {
-    validateRequest(request);
-
-    var customer = customerService.findByUuid(request.customerUuid());
-    var order =
-        OrderBuilder.order()
-            .customer(customer)
-            .warehouseId(request.warehouseUuid())
-            .total(request.total().toDomain())
-            .description(request.description())
-            .build();
-
-    request
-        .items()
-        .forEach(
-            itemRequest -> {
-              Product product = productService.findByUuid(itemRequest.productUuid());
-              order.addItem(product, itemRequest.quantity(), itemRequest.price().toDomain());
-            });
-
-    return super.create(order);
-  }
-
-  public BigDecimal calculateTotalIn(String orderUuid, String targetCurrency) {
-    var order = findByUuid(orderUuid);
-    var total = order.getTotal();
-
-    return currencyClient.convert(total.getCurrency().name(), targetCurrency, total.getAmount());
-  }
-
-  private void validateRequest(OrderRequest request) {
-    if (!StringUtils.hasText(request.customerUuid())) {
-      throw new IllegalArgumentException("Customer ID must not be empty");
-    }
-    if (!StringUtils.hasText(request.warehouseUuid())) {
-      throw new IllegalArgumentException("Warehouse ID must not be empty");
-    }
-    if (request.total() == null || request.total().amount().doubleValue() <= 0) {
-      throw new IllegalArgumentException("Total amount must be positive");
-    }
+  protected String getEntityName() {
+    return Constants.ENTITY_ORDER;
   }
 }

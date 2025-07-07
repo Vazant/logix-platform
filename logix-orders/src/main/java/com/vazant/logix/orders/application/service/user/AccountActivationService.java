@@ -5,88 +5,108 @@ import com.vazant.logix.orders.domain.user.User;
 import com.vazant.logix.orders.dto.user.AccountActivationRequest;
 import com.vazant.logix.orders.infrastructure.repository.user.ActivationTokenRepository;
 import com.vazant.logix.orders.infrastructure.repository.user.UserRepository;
-import jakarta.transaction.Transactional;
+import com.vazant.logix.orders.infrastructure.config.OrdersProperties;
 import java.time.LocalDateTime;
-import java.util.UUID;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 
-@Service
+/**
+ * Service for handling user account activation.
+ * Manages creation, validation, and removal of activation tokens, as well as user activation.
+ */
 @Slf4j
+@Service
+@Transactional
 @RequiredArgsConstructor
 public class AccountActivationService {
 
   private final ActivationTokenRepository activationTokenRepository;
   private final UserRepository userRepository;
-  private final UserService userService;
+  private final PasswordEncoder passwordEncoder;
+  private final OrdersProperties ordersProperties;
 
   /**
-   * Создает токен активации для пользователя
+   * Activates a user account using the provided token and new password.
+   *
+   * @param request the activation request containing token and new password
+   * @return true if activation was successful, false otherwise
    */
-  @Transactional
-  public String createActivationToken(User user) {
-    // Удаляем старые токены для этого пользователя
-    activationTokenRepository.deleteByUserId(user.getUuid());
-    
-    String token = UUID.randomUUID().toString();
-    LocalDateTime expiresAt = LocalDateTime.now().plusHours(24); // Токен действителен 24 часа
-    
-    ActivationToken activationToken = new ActivationToken(token, user, expiresAt);
-    activationTokenRepository.save(activationToken);
-    
-    log.info("Created activation token for user: {}", user.getUsername());
-    return token;
-  }
-
-  /**
-   * Активирует аккаунт пользователя по токену
-   */
-  @Transactional
   public boolean activateAccount(AccountActivationRequest request) {
-    ActivationToken token = activationTokenRepository
-        .findByTokenAndUsedFalse(request.token())
+    Assert.notNull(request, "Activation request must not be null");
+    Assert.hasText(request.token(), "Token must not be null or empty");
+    Assert.hasText(request.newPassword(), "New password must not be null or empty");
+    
+    log.info("Attempting to activate account with token: {}", request.token());
+
+    ActivationToken token = activationTokenRepository.findByToken(request.token())
         .orElse(null);
 
-    if (token == null) {
-      log.warn("Invalid or used activation token: {}", request.token());
-      return false;
-    }
-
-    if (token.isExpired()) {
-      log.warn("Expired activation token: {}", request.token());
+    if (token == null || token.getExpiresAt().isBefore(LocalDateTime.now())) {
+      log.warn("Invalid or expired activation token: {}", request.token());
+      if (token != null) {
+        activationTokenRepository.delete(token);
+      }
       return false;
     }
 
     User user = token.getUser();
-    user.setPassword(userService.encodePassword(request.newPassword()));
+    user.setPassword(passwordEncoder.encode(request.newPassword()));
     user.setEnabled(true);
-    
-    token.setUsed(true);
-    
     userRepository.save(user);
-    activationTokenRepository.save(token);
-    
-    log.info("Successfully activated account for user: {}", user.getUsername());
+
+    activationTokenRepository.delete(token);
+    log.info("Successfully activated account for user: {}", user.getUuid());
     return true;
   }
 
   /**
-   * Проверяет валидность токена активации
+   * Validates if an activation token is valid and not expired.
+   *
+   * @param token the activation token to validate
+   * @return true if token is valid, false otherwise
    */
   public boolean isValidToken(String token) {
-    return activationTokenRepository
-        .findByTokenAndUsedFalse(token)
-        .map(ActivationToken::isValid)
-        .orElse(false);
+    Assert.hasText(token, "Token must not be null or empty");
+    log.debug("Validating activation token: {}", token);
+
+    ActivationToken activationToken = activationTokenRepository.findByToken(token)
+        .orElse(null);
+
+    if (activationToken == null) {
+      return false;
+    }
+
+    boolean isValid = !activationToken.getExpiresAt().isBefore(LocalDateTime.now());
+
+    if (!isValid) {
+      log.debug("Token expired, removing: {}", token);
+      activationTokenRepository.delete(activationToken);
+    }
+
+    return isValid;
   }
 
   /**
-   * Очищает просроченные токены
+   * Creates and saves an activation token for the user and returns the token string.
+   *
+   * @param user the user to create token for
+   * @return the created token string
    */
-  @Transactional
-  public void cleanupExpiredTokens() {
-    activationTokenRepository.deleteExpiredTokens();
-    log.info("Cleaned up expired activation tokens");
+  public String createActivationToken(User user) {
+    Assert.notNull(user, "User must not be null");
+    
+    String token = java.util.UUID.randomUUID().toString();
+    ActivationToken activationToken = new ActivationToken();
+    activationToken.setUser(user);
+    activationToken.setToken(token);
+    activationToken.setExpiresAt(LocalDateTime.now().plusHours(ordersProperties.getCache().getTtlHours()));
+    activationTokenRepository.save(activationToken);
+    log.info("Created activation token for user {}: {}", user.getUuid(), token);
+    return token;
   }
 } 

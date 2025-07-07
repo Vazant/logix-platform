@@ -1,72 +1,126 @@
 package com.vazant.logix.orders.application.service.common;
 
-import static com.vazant.logix.orders.infrastructure.utils.UuidUtils.safeParse;
-
 import com.vazant.logix.orders.domain.common.BaseEntity;
 import com.vazant.logix.orders.domain.common.Updatable;
-import jakarta.transaction.Transactional;
+import com.vazant.logix.orders.infrastructure.utils.UuidUtils;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 
-public abstract class AbstractCrudService<T extends BaseEntity & Updatable<T>> {
+/**
+ * Abstract CRUD service implementation.
+ * <p>
+ * Provides common CRUD operations for any entity extending BaseEntity and implementing Updatable.
+ * Subclasses must specify the entity type and repository.
+ *
+ * @param <T> the entity type
+ */
+@Slf4j
+@RequiredArgsConstructor
+public abstract class AbstractCrudService<T extends BaseEntity & Updatable<T>> implements CrudService<T> {
 
-  protected final Logger log;
+  private final JpaRepository<T, UUID> repository;
   private final Class<T> entityClass;
 
-  protected AbstractCrudService(Class<T> entityClass) {
-    this.entityClass = entityClass;
-    this.log = LoggerFactory.getLogger(getClass());
-  }
-
-  protected abstract JpaRepository<T, UUID> getRepository();
-
+  /**
+   * Returns the simple name of the entity class.
+   *
+   * @return the entity name
+   */
   protected String getEntityName() {
     return entityClass.getSimpleName();
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public T findByUuid(String uuidStr) {
-    UUID uuid = safeParse(uuidStr);
-    return getRepository()
+    Assert.hasText(uuidStr, "UUID string must not be null or empty");
+    
+    UUID uuid = UuidUtils.parse(uuidStr);
+    return repository
         .findById(uuid)
-        .orElseThrow(
-            () -> new IllegalArgumentException(getEntityName() + " not found: " + uuidStr));
+        .orElseThrow(() -> new IllegalArgumentException(
+            String.format("%s not found with UUID: %s", getEntityName(), uuidStr)));
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public List<T> findAll() {
-    return getRepository().findAll();
+    return repository.findAll();
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   @Transactional
   public T create(T entity) {
-    T saved = getRepository().save(entity);
-    log.info("✅ Created {}: {}", getEntityName(), saved.getUuid());
+    Assert.notNull(entity, "Entity to create must not be null");
+    
+    T saved = repository.save(entity);
+    log.info("Created {} with UUID: {}", getEntityName(), saved.getUuid());
     return saved;
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   @Transactional
   public T update(String uuidStr, T updatedEntity) {
-    if (updatedEntity == null) {
-      throw new IllegalArgumentException(getEntityName() + " to update must not be null");
-    }
+    Assert.hasText(uuidStr, "UUID string must not be null or empty");
+    Assert.notNull(updatedEntity, "Entity to update must not be null");
+    
     T existing = findByUuid(uuidStr);
     existing.updateFrom(updatedEntity);
     existing.setUpdatedAt(LocalDateTime.now());
-    T saved = getRepository().save(existing);
-    log.info("♻️ Updated {}: {}", getEntityName(), saved.getUuid());
+    T saved = repository.save(existing);
+    log.info("Updated {} with UUID: {}", getEntityName(), saved.getUuid());
     return saved;
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   @Transactional
   public void delete(String uuidStr) {
-    UUID uuid = safeParse(uuidStr);
-    if (!getRepository().existsById(uuid)) {
-      throw new IllegalArgumentException(getEntityName() + " not found: " + uuidStr);
+    Assert.hasText(uuidStr, "UUID string must not be null or empty");
+    
+    UUID uuid = UuidUtils.parse(uuidStr);
+    if (!repository.existsById(uuid)) {
+      throw new IllegalArgumentException(
+          String.format("%s not found with UUID: %s", getEntityName(), uuidStr));
     }
-    getRepository().deleteById(uuid);
-    log.info("🗑️ Deleted {}: {}", getEntityName(), uuidStr);
+    repository.deleteById(uuid);
+    log.info("Deleted {} with UUID: {}", getEntityName(), uuidStr);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean exists(String uuidStr) {
+    Assert.hasText(uuidStr, "UUID string must not be null or empty");
+    
+    UUID uuid = UuidUtils.parse(uuidStr);
+    return repository.existsById(uuid);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public long count() {
+    return repository.count();
   }
 }

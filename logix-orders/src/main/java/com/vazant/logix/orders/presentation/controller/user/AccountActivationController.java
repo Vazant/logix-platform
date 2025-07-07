@@ -4,22 +4,28 @@ import com.vazant.logix.orders.application.service.user.AccountActivationService
 import com.vazant.logix.orders.dto.user.AccountActivationRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+/**
+ * REST controller for user account activation and token validation.
+ * <p>
+ * Provides endpoints for account activation and token validation.
+ */
 @RestController
 @RequestMapping("/api/account")
 @RequiredArgsConstructor
-@Slf4j
 public class AccountActivationController {
 
   private final AccountActivationService activationService;
 
   /**
-   * Активирует аккаунт пользователя
+   * Activates user account using activation token.
+   *
+   * @param request the activation request containing token and new password
+   * @return activation result with success status and message
    */
   @PostMapping("/activate")
   public ResponseEntity<Map<String, Object>> activateAccount(
@@ -41,7 +47,10 @@ public class AccountActivationController {
   }
 
   /**
-   * Проверяет валидность токена активации
+   * Checks the validity of the activation token.
+   *
+   * @param token the activation token to validate
+   * @return validation result with validity status and message
    */
   @GetMapping("/activate/validate")
   public ResponseEntity<Map<String, Object>> validateToken(@RequestParam String token) {

@@ -1,49 +1,36 @@
 package com.vazant.logix.orders.presentation.controller.product;
 
-import com.vazant.logix.orders.application.service.product.CategoryService;
+import com.vazant.logix.orders.application.service.common.CrudService;
 import com.vazant.logix.orders.domain.product.Category;
+import com.vazant.logix.orders.presentation.controller.common.BaseController;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * REST controller for managing product categories.
+ * <p>
+ * Provides CRUD operations for product categories.
+ * Extends BaseController to inherit common CRUD operations and validation.
+ */
 @RestController
-@RequestMapping("/category")
-public class CategoryController {
+@RequestMapping("/api/categories")
+public class CategoryController extends BaseController<Category> {
 
-  private final CategoryService categoryService;
-
-  public CategoryController(CategoryService categoryService) {
-    this.categoryService = categoryService;
+  public CategoryController(CrudService<Category> categoryService) {
+    super(categoryService);
   }
 
-  @GetMapping
-  public ResponseEntity<List<Category>> getAllCategories() {
-    List<Category> category = categoryService.findAll();
-    return ResponseEntity.ok(category);
-  }
-
-  @GetMapping("/{categoryUuid}")
-  public ResponseEntity<Category> getCategory(@PathVariable String categoryUuid) {
-    Category product = categoryService.findByUuid(categoryUuid);
-    return ResponseEntity.ok(product);
-  }
-
-  @PostMapping
-  public ResponseEntity<Category> createCategory(@RequestBody Category product) {
-    Category created = categoryService.create(product);
-    return ResponseEntity.ok(created);
-  }
-
-  @PutMapping("/{categoryUuid}")
-  public ResponseEntity<Category> updateCategory(
-      @PathVariable String categoryUuid, @RequestBody Category category) {
-    Category updated = categoryService.update(categoryUuid, category);
-    return ResponseEntity.ok(updated);
-  }
-
-  @DeleteMapping("/{categoryUuid}")
-  public ResponseEntity<Void> deleteCategory(@PathVariable String categoryUuid) {
-    categoryService.delete(categoryUuid);
-    return ResponseEntity.noContent().build();
+  /**
+   * Find categories by name containing the search term.
+   *
+   * @param name the name to search for
+   * @return list of matching categories
+   */
+  @GetMapping("/search")
+  public ResponseEntity<List<Category>> searchByName(@RequestParam String name) {
+    // TODO: Implement category search by name
+    // This would require adding a method to CategoryService
+    return ResponseEntity.ok(List.of());
   }
 }

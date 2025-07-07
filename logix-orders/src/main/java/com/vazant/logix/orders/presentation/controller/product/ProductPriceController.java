@@ -1,49 +1,48 @@
 package com.vazant.logix.orders.presentation.controller.product;
 
-import com.vazant.logix.orders.application.service.product.ProductPriceService;
+import com.vazant.logix.orders.application.service.common.CrudService;
 import com.vazant.logix.orders.domain.product.ProductPrice;
+import com.vazant.logix.orders.presentation.controller.common.BaseController;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * REST controller for managing product prices.
+ * <p>
+ * Provides CRUD operations for product prices.
+ * Extends BaseController to inherit common CRUD operations and validation.
+ */
 @RestController
-@RequestMapping("/productPrices")
-public class ProductPriceController {
+@RequestMapping("/api/product-prices")
+public class ProductPriceController extends BaseController<ProductPrice> {
 
-  private final ProductPriceService productPriceService;
-
-  public ProductPriceController(ProductPriceService productPriceService) {
-    this.productPriceService = productPriceService;
+  public ProductPriceController(CrudService<ProductPrice> productPriceService) {
+    super(productPriceService);
   }
 
-  @GetMapping
-  public ResponseEntity<List<ProductPrice>> getAllProductPrices() {
-    List<ProductPrice> productPrices = productPriceService.findAll();
-    return ResponseEntity.ok(productPrices);
+  /**
+   * Find product prices by product UUID.
+   *
+   * @param productId the product UUID
+   * @return list of prices for the product
+   */
+  @GetMapping("/product/{productId}")
+  public ResponseEntity<List<ProductPrice>> findByProduct(@PathVariable String productId) {
+    // TODO: Implement product price search by product
+    // This would require adding a method to ProductPriceService
+    return ResponseEntity.ok(List.of());
   }
 
-  @GetMapping("/{productPriceUuid}")
-  public ResponseEntity<ProductPrice> getProductPrice(@PathVariable String productPriceUuid) {
-    ProductPrice product = productPriceService.findByUuid(productPriceUuid);
-    return ResponseEntity.ok(product);
-  }
-
-  @PostMapping
-  public ResponseEntity<ProductPrice> createProductPrice(@RequestBody ProductPrice product) {
-    ProductPrice created = productPriceService.create(product);
-    return ResponseEntity.ok(created);
-  }
-
-  @PutMapping("/{productPriceUuid}")
-  public ResponseEntity<ProductPrice> updateProductPrice(
-      @PathVariable String productPriceUuid, @RequestBody ProductPrice productPrice) {
-    ProductPrice updated = productPriceService.update(productPriceUuid, productPrice);
-    return ResponseEntity.ok(updated);
-  }
-
-  @DeleteMapping("/{productPriceUuid}")
-  public ResponseEntity<Void> deleteProductPrice(@PathVariable String productPriceUuid) {
-    productPriceService.delete(productPriceUuid);
-    return ResponseEntity.noContent().build();
+  /**
+   * Find product prices by currency.
+   *
+   * @param currency the currency code
+   * @return list of prices in the specified currency
+   */
+  @GetMapping("/currency/{currency}")
+  public ResponseEntity<List<ProductPrice>> findByCurrency(@PathVariable String currency) {
+    // TODO: Implement product price search by currency
+    return ResponseEntity.ok(List.of());
   }
 }
